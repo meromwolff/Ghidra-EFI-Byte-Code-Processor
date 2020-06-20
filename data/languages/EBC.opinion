@@ -1,0 +1,5 @@
+<opinions>
+    <constraint loader="Portable Executable (PE)" compilerSpecID="default">
+        <constraint primary="1"     processor="EBC"     endian="little"    size="64" />
+	</constraint>
+</opinions>

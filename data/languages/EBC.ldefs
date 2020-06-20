@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<language_definitions>
+  <language processor="EBC"
+            endian="little"
+            size="64" 
+            variant="default"
+            version="1.0"
+            slafile="EBC.sla"
+            processorspec="EBC.pspec"
+            id="EBC:LE:64:default">
+    <description>EFI Byte Code</description>
+    <compiler name="EBC" spec="EBC.cspec" id="default"/>
+  </language>
+  
+</language_definitions>

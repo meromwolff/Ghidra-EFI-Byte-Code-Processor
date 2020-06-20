@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<compiler_spec>
+
+<!-- ==============DATA TYPES SIZE CONVENTION AND ALIGNMENT============== -->
+
+   <data_organization>
+	<machine_alignment value="2" />
+	<default_alignment value="2" /> <!-- according to p. 984 -->
+	<pointer_size value="8" /> 
+
+   </data_organization>  
+  
+  
+  <!-- ==============SP AND GLOBAL MEM SPACE============== -->
+  
+  <global>
+    <range space="ram"/>
+  </global>
+  <!-- p. 983 in table 149 -->
+  <stackpointer register="R0" space="ram"/>  
+  <returnaddress>
+    <varnode space="stack" offset="0" size="8"/>
+  </returnaddress>
+  
+  
+  
+  <!-- ==============CALLING CONVENTIONS============== -->
+  
+  <default_proto>
+  <!-- =============== DEFAULT CALLING PROTOTYPE =============== -->
+  
+	 <!--stack is changed by 8 by a call64/push64 opcode -->
+      <prototype name="ebcCdecl64" extrapop="8" stackshift="8">
+      
+      <!-- ====INPUT==== --> 
+      <input>
+        <pentry minsize="1" maxsize="500" align="8">
+          <addr offset="8" space="stack"/>
+        </pentry>
+      </input>
+      
+	  <!-- ====OUTPUT==== -->
+      <output killedbycall="true">
+        <pentry minsize="1" maxsize="8">
+          <register name="R7"/>
+        </pentry>
+      </output>
+	   
+	  <!-- ====UNAFFECTED==== -->
+	  
+	  <!-- table 149, p.983 -->
+      <unaffected>
+        <varnode space="ram" offset="0" size="4"/>
+        <register name="R1"/>
+        <register name="R2"/>
+        <register name="R3"/>
+        <register name="R0"/>
+      </unaffected>
+	  
+	  <!-- ====KILLED BY CALL==== -->
+	  
+	  <!-- table 149 p.983 -->
+      <killedbycall>
+        <register name="R4"/>
+	    <register name="R5"/>
+        <register name="R6"/>
+        <register name="R7"/>
+      </killedbycall>
+    </prototype>
+  </default_proto>
+  
+  </compiler_spec>

@@ -1,0 +1,26 @@
+# Sleigh specification file for the EFI Byte code 
+# See the "Unified Extensible Firmware Interface (UEFI) Specification, version 2.8" pdf (Chapter 22) for EBC syntax
+
+define endian=little;
+
+
+define space ram      type=ram_space      size=8  default;
+define space register type=register_space size=1;
+
+define register offset=0x00 size=8 [ R0 R1 R2 R3 R4 R5 R6 R7 ];
+define register offset=0x40 size=8 [ IP FLAGS ];
+
+
+# Flag bits (See p.911 in the manual for detailed description)
+@define C_flag "FLAGS[0,1]"		# C: Condition Code
+@define S_flag "FLAGS[1,1]"		# S: Single Step
+
+#===========================================#
+## Define default sizeof(VOID *) = 8 bytes ##
+#===========================================#
+
+#@define ARCH "32"
+@define ARCH "64"
+
+#Include contents of ebc.sinc file
+@include "EBC.sinc"

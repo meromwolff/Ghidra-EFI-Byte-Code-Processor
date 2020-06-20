@@ -1,0 +1,2359 @@
+#Set SIZEOFNATURAL value depending on ARCH defined in .slaspec
+@if ARCH =="32"
+@define SIZEOFNATURAL "4"
+@else
+@define SIZEOFNATURAL "8"
+@endif
+
+#@define indexData "indexData16"
+
+# Get the mask for NaturalUnits. First get the number of bits from the index.
+# Scale it for 16-bit indexes
+#@define NBits "((($(indexData) & 0x7000) >> 12) * 2)"
+
+# Now using the number of bits, create a mask.
+#@define Mask "(~0 << $(NBits))"
+
+# Now using the mask, extract NaturalUnits from the lower bits of the index.
+#@define NaturalUnits "($(indexData) &~$(Mask))"
+
+# Now compute ConstUnits
+#@define ConstUnits "((($(indexData) &~0xF000) & $(Mask)) >> $(NBits))"
+
+#The following logic was taken from the EBC interpreter: https://github.com/tianocore/edk2/blob/master/MdeModulePkg/Universal/EbcDxe/EbcExecute.c lines 4409-4617
+#Note we could not use the same logic as it is written in IDA's ebc.py processor module since we need it to be a "one-liner" in order for Ghidra to not throw an error...
+
+#((((data >> 15) == 0) * (2 * indexoffset)) + indexoffset)
+
+
+#Compute DestIndex16 final offset value for display
+@if ARCH=="64"
+@define DestOffset16  "(((destIndexData16 >> 15) * ((-2) * ((destIndexData16 &~(~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) * 8 + (((destIndexData16 &~0xF000) & (~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) >> (((destIndexData16 & 0x7000) >> 12) * 2))))) + ((destIndexData16 &~(~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) * 8 + (((destIndexData16 &~0xF000) & (~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) >> (((destIndexData16 & 0x7000) >> 12) * 2))))"
+@define DataDestOffset16 "(((data16 >> 15) * ((-2) * ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 8 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))) + ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 8 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))"
+@else
+@define DestOffset16  "(((destIndexData16 >> 15) * ((-2) * ((destIndexData16 &~(~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) * 4 + (((destIndexData16 &~0xF000) & (~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) >> (((destIndexData16 & 0x7000) >> 12) * 2))))) + ((destIndexData16 &~(~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) * 4 + (((destIndexData16 &~0xF000) & (~0 << (((destIndexData16 & 0x7000) >> 12) * 2))) >> (((destIndexData16 & 0x7000) >> 12) * 2))))"
+@define DataDestOffset16  "(((data16 >> 15) * ((-2) * ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 4 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))) + ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 4 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))"
+@endif
+
+
+#Compute DestIndex32 final offset value for display
+@if ARCH=="64"
+@define DestOffset32 "(((destIndexData32 >> 31) * ((-2) * ((destIndexData32 &~(~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) * 8 + (((destIndexData32 &~0xF0000000) & (~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) >> (((destIndexData32 & 0x70000000) >> 28) * 4))))) + ((destIndexData32 &~(~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) * 8 + (((destIndexData32 &~0xF0000000) & (~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) >> (((destIndexData32 & 0x70000000) >> 28) * 4))))"
+@define DataDestOffset32  "(((data32 >> 31) * ((-2) * ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 8 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))) + ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 8 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))"
+@else
+@define DestOffset32  "(((destIndexData32 >> 31) * ((-2) * ((destIndexData32 &~(~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) * 4 + (((destIndexData32 &~0xF0000000) & (~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) >> (((destIndexData32 & 0x70000000) >> 28) * 4))))) + ((destIndexData32 &~(~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) * 4 + (((destIndexData32 &~0xF0000000) & (~0 << (((destIndexData32 & 0x70000000) >> 28) * 4))) >> (((destIndexData32 & 0x70000000) >> 28) * 4))))"
+@define DataDestOffset32  "(((data32 >> 31) * ((-2) * ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 4 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))) + ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 4 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))"
+@endif
+
+
+#Compute DestIndex64 final offset value for display
+@if ARCH=="64"
+@define DestOffset64  "(((destIndexData64 >> 63) * ((-2) * ((destIndexData64 &~(~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) * 8 + (((destIndexData64 &~0xF00000000000) & (~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) >> (((destIndexData64 & 0x700000000000) >> 60) * 8))))) + ((destIndexData64 &~(~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) * 8 + (((destIndexData64 &~0xF00000000000) & (~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) >> (((destIndexData64 & 0x700000000000) >> 60) * 8))))"
+@define DataDestOffset64  "(((data64 >> 63) * ((-2) * ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 8 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))) + ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 8 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))"
+@else
+@define DestOffset64  "(((destIndexData64 >> 63) * ((-2) * ((destIndexData64 &~(~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) * 4 + (((destIndexData64 &~0xF00000000000) & (~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) >> (((destIndexData64 & 0x700000000000) >> 60) * 8))))) + ((destIndexData64 &~(~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) * 4 + (((destIndexData64 &~0xF00000000000) & (~0 << (((destIndexData64 & 0x700000000000) >> 60) * 8))) >> (((destIndexData64 & 0x700000000000) >> 60) * 8))))"
+@define DataDestOffset64  "(((data64 >> 63) * ((-2) * ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 4 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))) + ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 4 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))"
+@endif
+
+
+#Compute Index16 final offset value for display
+@if ARCH=="64"
+@define SrcOffset16  "(((indexData16 >> 15) * ((-2) * ((indexData16 &~(~0 << (((indexData16 & 0x7000) >> 12) * 2))) * 8 + (((indexData16 &~0xF000) & (~0 << (((indexData16 & 0x7000) >> 12) * 2))) >> (((indexData16 & 0x7000) >> 12) * 2))))) + ((indexData16 &~(~0 << (((indexData16 & 0x7000) >> 12) * 2))) * 8 + (((indexData16 &~0xF000) & (~0 << (((indexData16 & 0x7000) >> 12) * 2))) >> (((indexData16 & 0x7000) >> 12) * 2))))"
+@define DataSrcOffset16 "(((data16 >> 15) * ((-2) * ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 8 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))) + ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 8 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))"
+@else
+@define SrcOffset16  "(((indexData16 >> 15) * ((-2) * ((indexData16 &~(~0 << (((indexData16 & 0x7000) >> 12) * 2))) * 4 + (((indexData16 &~0xF000) & (~0 << (((indexData16 & 0x7000) >> 12) * 2))) >> (((indexData16 & 0x7000) >> 12) * 2))))) + ((indexData16 &~(~0 << (((indexData16 & 0x7000) >> 12) * 2))) * 4 + (((indexData16 &~0xF000) & (~0 << (((indexData16 & 0x7000) >> 12) * 2))) >> (((indexData16 & 0x7000) >> 12) * 2))))"
+@define DataSrcOffset16  "(((data16 >> 15) * ((-2) * ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 4 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))) + ((data16 &~(~0 << (((data16 & 0x7000) >> 12) * 2))) * 4 + (((data16 &~0xF000) & (~0 << (((data16 & 0x7000) >> 12) * 2))) >> (((data16 & 0x7000) >> 12) * 2))))"
+@endif
+
+#Compute Index32 final offset value for display
+@if ARCH=="64"
+@define SrcOffset32 "(((indexData32 >> 31) * ((-2) * ((indexData32 &~(~0 << (((indexData32 & 0x70000000) >> 28) * 4))) * 8 + (((indexData32 &~0xF0000000) & (~0 << (((indexData32 & 0x70000000) >> 28) * 4))) >> (((indexData32 & 0x70000000) >> 28) * 4))))) + ((indexData32 &~(~0 << (((indexData32 & 0x70000000) >> 28) * 4))) * 8 + (((indexData32 &~0xF0000000) & (~0 << (((indexData32 & 0x70000000) >> 28) * 4))) >> (((indexData32 & 0x70000000) >> 28) * 4))))"
+@define DataSrcOffset32  "(((data32 >> 31) * ((-2) * ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 8 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))) + ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 8 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))"
+@else
+@define SrcOffset32  "(((indexData32 >> 31) * ((-2) * ((indexData32 &~(~0 << (((indexData32 & 0x70000000) >> 28) * 4))) * 4 + (((indexData32 &~0xF0000000) & (~0 << (((indexData32 & 0x70000000) >> 28) * 4))) >> (((indexData32 & 0x70000000) >> 28) * 4))))) + ((indexData32 &~(~0 << (((indexData32 & 0x70000000) >> 28) * 4))) * 4 + (((indexData32 &~0xF0000000) & (~0 << (((indexData32 & 0x70000000) >> 28) * 4))) >> (((indexData32 & 0x70000000) >> 28) * 4))))"
+@define DataSrcOffset32  "(((data32 >> 31) * ((-2) * ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 4 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))) + ((data32 &~(~0 << (((data32 & 0x70000000) >> 28) * 4))) * 4 + (((data32 &~0xF0000000) & (~0 << (((data32 & 0x70000000) >> 28) * 4))) >> (((data32 & 0x70000000) >> 28) * 4))))"
+@endif
+
+#Compute Index64 final offset value for display
+@if ARCH=="64"
+@define SrcOffset64  "(((indexData64 >> 63) * ((-2) * ((indexData64 &~(~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) * 8 + (((indexData64 &~0xF00000000000) & (~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) >> (((indexData64 & 0x700000000000) >> 60) * 8))))) + ((indexData64 &~(~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) * 8 + (((indexData64 &~0xF00000000000) & (~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) >> (((indexData64 & 0x700000000000) >> 60) * 8))))"
+@define DataSrcOffset64  "(((data64 >> 63) * ((-2) * ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 8 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))) + ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 8 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))"
+@else
+@define SrcOffset64  "(((indexData64 >> 63) * ((-2) * ((indexData64 &~(~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) * 4 + (((indexData64 &~0xF00000000000) & (~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) >> (((indexData64 & 0x700000000000) >> 60) * 8))))) + ((indexData64 &~(~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) * 4 + (((indexData64 &~0xF00000000000) & (~0 << (((indexData64 & 0x700000000000) >> 60) * 8))) >> (((indexData64 & 0x700000000000) >> 60) * 8))))"
+@define DataSrcOffset64  "(((data64 >> 63) * ((-2) * ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 4 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))) + ((data64 &~(~0 << (((data64 & 0x700000000000) >> 60) * 8))) * 4 + (((data64 &~0xF00000000000) & (~0 << (((data64 & 0x700000000000) >> 60) * 8))) >> (((data64 & 0x700000000000) >> 60) * 8))))"
+@endif
+
+
+#Define a 16-bit token for the "Opcode byte"
+define token opcodeByte (16)
+   brOpcode		 		 = (0,8)		 # Opcode field for BREAK instruction
+   opcode     			 = (0,5)    	 # Opcode unique ID
+   is64Op     		 	 = (6,6)    	 # 1 - Opcode is a 64-bit variant, 0 - Opcode is a 32-bit variant
+   condMod2		 		 = (6,6)    	 # Condition mode for JMP8 instruction; 1 - Jump if C_FLAG is set, 0 - Jump if C_FLAG is off
+   isOp2IndexPresent	 = (6,6)    	 # Index present for Operand2 in MOV instruction - 1 - Opcode contains Immediate/Index data, 0 - Opcode does not contain any additional data
+   isDataPresent2	 	 = (6,6)    	 # Same as the "isDataPresent" field just for the MOVsn instruction
+   immDataSize		 	 = (6,7)         # Size of the imm data in the MOVI/MOVIn instructions; 0 - Reserved, 1 - 16 bit, 2 - 32-bit, 3 - 64-bit.
+   isDataPresent	 	 = (7,7)    	 # 1 - Opcode contains Immediate/Index data, 0 - Opcode does not contain any additional data
+   isOp1IndexPresent	 = (7,7)    	 # Index present for Operand1 in MOV instruction - 1 - Opcode contains Immediate/Index data, 0 - Opcode does not contain any additional data
+   is32ImmData		 	 = (7,7)	   	 # 1 - instruction contains a 32 Immediate data, 0 - instruction contains a 16 Immediate data
+   isCond2		 		 = (7,7)    	 # Specifies if JMP8 instruction is conditional or not, 1 - conditional, 0 - unconditional
+   brCode		 		 = (8,8)	   	 # BREAK instruction code operand 
+   op1Reg 		 		 = (8,10)   	 # Operand 1 Register
+   dedcReg1		 		 = (8,10)   	 # Dedicated register index in the LOADSP/STORESP Instructions
+   jmp8imm		 		 = (8,15) signed # Imm data for JMP8 instruction
+   op1RegMod 		 	 = (11,11)  	 # Operand 1: 0 - Direct, 1 - Indirect
+   isIndexPresent        = (12,12)  	 # 1 - An optional Index is specified in a CMPI instruction, 0 - An optional Index is NOT specified in a CMPI instruction
+   isRel		 		 = (12,12)  	 # 1 - Imm data is a relative address, 0 - Imm data is an absolute address
+   movType		 		 = (12,13)		 # 2-Bit value to indicate the move size for the MOVI instruction: 0 - 8 bit, 1 - 16 bit, 2 - 32 bit, 3 - 64 bit.  
+   op2Reg 		 		 = (12,14)  	 # Operand 2 Register
+   dedcReg2		 		 = (12,14) 		 # Dedicated register index in the LOADSP/STORESP Instructions
+   isNative		 		 = (13,13)  	 # 1 - Call instruction of Native code, 0 - Call instruction of EBC code
+   condMod		 		 = (14,14)  	 # Condition mode for conditional jumps; 1 - Jump if C_FLAG is set, 0 - Jump if C_FLAG is off
+   isOp1IndexPresent2	 = (14,14)	 	 # Index present for Operand1 in MOVI instruction - 1 - Opcode contains Immediate/Index data, 0 - Opcode does not contain any additional data
+   op2RegMod 			 = (15,15)  	 # Operand 2: 0 - Direct, 1 - Indirect
+   isCond		 		 = (15,15) 	 	 # Specifies if JMP instruction is conditional or not, 1 - conditional, 0 - unconditional
+;
+
+
+#Define optional 16/32/64 bit data tokens for the data that is interpreted as if it was in "index format" (like in the MOV instruction)
+define token optionalData16 (16)
+
+	data16 = (0,15) 
+;
+
+define token optionalData32 (32)
+
+	data32 = (0,31)
+;
+
+define token optionalData64 (64)
+
+	data64 = (0,63)
+;
+
+
+#Define optional 16/32/64 bit data tokens for signed data used in direct operand format or for opcodes that use an immediate value
+define token optionalRegData16 (16)
+
+	regData16 = (0,15) signed 
+;
+
+define token optionalRegData32 (32)
+
+	regData32 = (0,31) signed
+;
+
+define token optionalRegData64 (64)
+
+	regData64 = (0,63) signed
+;
+
+
+#Define optional 16/32/64 bit data tokens for source operand's that are in "index format"
+define token indexOptionalData16 (16)
+
+	indexData16 = (0,15) 
+;
+
+define token indexOptionalData32 (32)
+
+	indexData32 = (0,31)
+;
+
+define token indexOptionalData64 (64)
+
+	indexData64 = (0,63)
+;
+
+
+
+#Define optional 16/32/64 bit data tokens for destination operand's that are in "index format"
+define token destIndexOptionalData16 (16)
+
+	destIndexData16 = (0,15) 
+;
+
+define token destIndexOptionalData32 (32)
+
+	destIndexData32 = (0,31)
+;
+
+define token destIndexOptionalData64 (64)
+
+	destIndexData64 = (0,63)
+;
+
+
+attach variables [ op1Reg op2Reg ]      [ R0 R1 R2 R3 R4 R5 R6 R7 ];
+
+attach variables [ dedcReg1 dedcReg2 ]  [ FLAGS IP _ _ _ _ _ _ ];
+
+
+define pcodeop break; 			#BREAK instruction, see p.993 in the manual for further description 
+
+################################################################
+# Macros
+################################################################
+
+macro push8(addr) {
+	
+  local mysave:8 = addr;
+  R0 = R0-8;
+  *:8 R0 = mysave;
+}
+
+macro pop8(reg) {
+	
+  reg = *:8 R0;
+  R0 = R0 + 8;
+}
+
+################################################################
+# Constructors
+################################################################
+
+
+#Register 1 in Direct mode and  Indirect modes
+RsDirect:   op1Reg			 			 		 is op1Reg { export op1Reg; }
+RsIndirect: "["^op1Reg"]"	 			 		 is op1Reg { export *:8 op1Reg; }
+RsIndx16:   "["^op1Reg + offset16Display"]"   	 is op1Reg; indexData16 [ offset16Display = $(SrcOffset16); ] { local addr:8 = op1Reg + zext(offset16Display:2); export *:8 addr; } 
+RsData16: op1Reg + regData16		 		 	 is op1Reg; regData16  { local val:8 = op1Reg + zext(regData16:2); export *:8 val; }
+RsIndx32:   "["^op1Reg + offset32Display"]"   	 is op1Reg; indexData32 [ offset32Display = $(SrcOffset32); ] { local addr:8 = op1Reg + zext(offset32Display:4); export *:8 addr; }
+RsData32: op1Reg + regData32		 		 	 is op1Reg; regData32  { local val:8 = op1Reg + zext(regData32:4); export *:8 val; }
+RsIndx64:   "["^op1Reg + offset64Display"]"   	 is op1Reg; indexData64 [ offset64Display = $(SrcOffset64); ] { local addr:8 = op1Reg + offset64Display; export *:8 addr; }  
+RsData64: op1Reg + regData64	  	 		 	 is op1Reg; regData64  { local val:8 = op1Reg + regData64; export *:8 val; }
+
+#Register 1 constructors for the MOV instruction
+MovRsDirect:   op1Reg			 			 		 is op1RegMod=0x0 & op1Reg { export op1Reg; }
+MovRsIndirect: "["^op1Reg"]"	 			 		 is op1RegMod=0x1 & op1Reg { export *:8 op1Reg; }
+MovRsIndx16:   "["^op1Reg + offset16Display"]"   	 is op1RegMod=0x1 & op1Reg; indexData16 [ offset16Display = $(SrcOffset16); ] { local addr:8 = op1Reg + zext(offset16Display:2); export *:8 addr; } 
+MovRsIndx16:   op1Reg + offset16Display		 	 	 is op1RegMod=0x0 & op1Reg; data16 [ offset16Display = $(DataSrcOffset16); ] { local val:8 = op1Reg + zext(offset16Display:2); export *:8 val; }
+MovRsIndx32:   "["^op1Reg + offset32Display"]"   	 is op1RegMod=0x1 & op1Reg; indexData32 [ offset32Display = $(SrcOffset32); ] { local addr:8 = op1Reg + zext(offset32Display:4); export *:8 addr; }
+MovRsIndx32:   op1Reg + offset32Display		 	 	 is op1RegMod=0x0 & op1Reg; data32 [ offset32Display = $(DataSrcOffset32); ] { local val:8 = op1Reg + zext(offset32Display:4); export *:8 val; }
+MovRsIndx64:   "["^op1Reg + offset64Display"]"   	 is op1RegMod=0x1 & op1Reg; indexData64 [ offset64Display = $(SrcOffset64); ] { local addr:8 = op1Reg + offset64Display; export *:8 addr; }  
+MovRsIndx64:   op1Reg + offset64Display	  	 	 	 is op1RegMod=0x0 & op1Reg; data64 [ offset64Display = $(DataSrcOffset64); ] { local val:8 = op1Reg + offset64Display; export *:8 val; }
+
+
+
+#Register 2 in Direct and Indirect modes
+Rd: op2Reg				 				 is op2RegMod=0x0 & op2Reg { local val:8 = op2Reg; export val; }
+Rd: "["^op2Reg"]"		         		 is op2RegMod=0x1 & op2Reg { local val:8 = *:8 op2Reg; export val; } 
+Rd16: "["^op2Reg + offset16Display"]"    is op2RegMod=0x1 & op2Reg; destIndexData16 [ offset16Display = $(DestOffset16); ] { local reg:8 = op2Reg; local addr:8 = reg + zext(offset16Display:2); local val:8 = *:8 addr; export val; }
+Rd16: op2Reg + regData16			 	 is op2RegMod=0x0 & op2Reg; regData16  { local val:8 = op2Reg + zext(regData16:2); export val; }
+Rd32: "["^op2Reg + ^offset32Display"]"   is op2RegMod=0x1 & op2Reg; destIndexData32 [ offset32Display = $(DestOffset32); ] { local reg:8 = op2Reg; local addr:8 = reg + zext(offset32Display:4); local val:8 = *:8 addr; export val; }
+Rd32: op2Reg + regData32			 	 is op2RegMod=0x0 & op2Reg; regData32  { local val:8 = op2Reg + zext(regData32:4); export val; }
+
+# ---- Not used ----
+#Rd64: "["^op2Reg + ^offset64Display"]"  is op2RegMod=0x1 & op2Reg; destIndexData64 [ offset64Display = $(DestOffset64); ] { local reg:8 = op2Reg; local addr:8 = reg + offset64Display; local val:8 = *:8 addr; export val; }
+#Rd64: op2Reg + regData64			 	 is op2RegMod=0x0 & op2Reg; regData64  { local val:8 = op2Reg + regData64; export val; }
+
+#Register 2 constructors for the MOV instruction 
+MovRd: op2Reg				 			 	is op2RegMod=0x0 & op2Reg { local val:8 = op2Reg; export val; }
+MovRd: "["^op2Reg"]"		         	 	is op2RegMod=0x1 & op2Reg { local val:8 = *:8 op2Reg; export val; }
+MovRd16: "["^op2Reg + offset16Display"]"    is op2RegMod=0x1 & op2Reg; destIndexData16 [ offset16Display = $(DestOffset16); ] { local reg:8 = op2Reg; local addr:8 = reg + zext(offset16Display:2); local val:8 = *:8 addr; export val; }
+MovRd16: op2Reg + offset16Display			is op2RegMod=0x0 & op2Reg; data16 [ offset16Display = $(DataDestOffset16); ] 	  { local val:8 = op2Reg + zext(offset16Display:2); export val; }
+MovRd32: "["^op2Reg + ^offset32Display"]"   is op2RegMod=0x1 & op2Reg; destIndexData32 [ offset32Display = $(DestOffset32); ] { local reg:8 = op2Reg; local addr:8 = reg + zext(offset32Display:4); local val:8 = *:8 addr; export val; }
+MovRd32: op2Reg + offset32Display			is op2RegMod=0x0 & op2Reg; data32 [ offset32Display = $(DataDestOffset32); ] 	  { local val:8 = op2Reg + zext(offset32Display:4); export val; }
+MovRd64: "["^op2Reg + ^offset64Display"]"   is op2RegMod=0x1 & op2Reg; destIndexData64 [ offset64Display = $(DestOffset64); ] { local reg:8 = op2Reg; local addr:8 = reg + offset64Display; local val:8 = *:8 addr; export val; }
+MovRd64: op2Reg + offset64Display			is op2RegMod=0x0 & op2Reg; data64 [ offset64Display = $(DataDestOffset64); ] 	  { local val:8 = op2Reg + offset64Display; export val; } 
+
+#Define Constructors for 32 and 64 instruction variants
+InstType: "64"	is is64Op=0x1 { }
+InstType: "32"	is is64Op=0x0 { }
+
+#"External Call Indicator" constructor for the CALL instruction
+Ex: "EX" is isNative=0x1 { }
+Ex:      is isNative=0x0 { }
+
+#Direct Branch destination variations for the CALL/JMP instruction - We create for each variation a variation for the case that op1Reg is R0 since
+#thta is what is stated in the documentation of those instructions.
+
+#JMP/CALL32{EX} Absolute - R1 (Imm32)
+BranchDest32: regData32 					is isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x0 & op1Reg=0x0; regData32 { export * regData32; } 
+BranchDest32: RsData32 						is (isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x0) ... & RsData32 { export RsData32; }
+
+#JMP/CALL32{EX} Absolute - @R1 (Index32)
+BranchDest32: "[R0 +"offset32Display"]"		is isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x1 & op1Reg=0x0; indexData32 [ offset32Display = $(SrcOffset32); ] { local indxPointer:4 = zext(offset32Display:4); export * indxPointer; } 
+BranchDest32: RsIndx32						is (isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x1) ... & RsIndx32 { export RsIndx32; }
+  
+#JMP/CALL32{EX} Relative - R1 (Imm32)
+BranchDest32: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x0 & op1Reg=0x0; regData32 [ addr = regData32 + inst_next; ] { export * addr; }
+BranchDest32: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x0 & op1Reg; regData32 [ addr = op1Reg + regData32 + inst_next; ] { export * addr; }
+  
+#JMP/CALL32{EX} Relative - @R1 (Index32)
+BranchDest32: addr	    					is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x1 & op1Reg=0x0; indexData32 [ addr = $(SrcOffset32) + inst_next; ] { export * addr; } 
+BranchDest32: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x1 & op1Reg; indexData32 [ addr = op1Reg + $(SrcOffset32) + inst_next; ] { export * addr; }  
+
+#JMP/CALL64{EX} Absolute - R1 (Imm64)
+BranchDest64: regData64 					is isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x0 & op1Reg=0x0; regData64 { export *:8 regData64; } 
+BranchDest64: RsData64 						is (isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x0) ... & RsData64 { export RsData64; }
+
+#JMP/CALL64{EX} Absolute - @R1 (Index64)
+BranchDest64: "[R0 +"offset64Display"]"		is isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x1 & op1Reg=0x0; indexData64 [ offset64Display = $(SrcOffset64); ] { local addr:8 = offset64Display:8; export *:8 addr; } 
+BranchDest64: RsIndx64						is (isRel=0x0 & isDataPresent=0x1 & op1RegMod=0x1) ... & RsIndx64 { export RsIndx64; }
+  
+#JMP/CALL64{EX} Relative - R1 (Imm64)
+BranchDest64: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x0 & op1Reg=0x0; regData64 [ addr = regData64 + inst_next; ] { export *:8 addr; }
+BranchDest64: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x0 & op1Reg; regData64 [ addr = op1Reg + regData64 + inst_next; ] { export *:8 addr; }
+  
+#JMP/CALL64{EX} Relative - @R1 (Index64) 
+BranchDest64: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x1 & op1Reg=0x0; indexData64 [ addr = $(SrcOffset64) + inst_next; ] { export *:8 addr; }
+BranchDest64: addr							is isRel=0x1 & isDataPresent=0x1 & op1RegMod=0x1 & op1Reg; indexData64 [ addr = op1Reg + $(SrcOffset64) + inst_next; ] {export *:8 addr; }  
+
+#JMP8 offset calculation
+Jmp8Dest: addr	is jmp8imm [ addr = (jmp8imm*2) + inst_next; ] { export *:8 addr; }
+
+
+#Indirect Branch destination variations for the CALL/JMP instruction - We create for each variation a variation for the case that op1Reg is R0.
+
+#JMP/CALL32{EX} Absolute - R1 (No Data Present)
+BranchDestReg32: addr						is isRel=0x0 & isDataPresent=0x0 & op1Reg=0x0 [ addr = 0; ] { export *:4 addr; } 
+BranchDestReg32: "["^op1Reg"]"				is isRel=0x0 & isDataPresent=0x0 & op1Reg { export *:4 op1Reg; }
+
+#JMP/CALL32{EX} Relative - R1 (No Data Present)
+BranchDestReg32: addr						is isRel=0x1 & isDataPresent=0x0 & op1Reg=0x0 [ addr = inst_next; ] { export *:4 addr; } 
+BranchDestReg32: addr						is isRel=0x1 & isDataPresent=0x0 & op1Reg [ addr = op1Reg + inst_next; ] { export *:4 addr; }
+
+#JMP/CALL64{EX} Absolute - R1 (No Data Present) 
+BranchDestReg64: addr						is isRel=0x0 & isDataPresent=0x0 & op1Reg=0x0 [ addr = 0; ] { export *:8 addr; }
+BranchDestReg64: "["^op1Reg"]"				is isRel=0x0 & isDataPresent=0x0 & op1Reg { export *:8 op1Reg; }
+
+#JMP/CALL64{EX} Relative - R1 (No Data Present)
+BranchDestReg64: addr						is isRel=0x1 & isDataPresent=0x0 & op1Reg=0x0 [ addr = inst_next; ] { export *:8 addr; } 
+BranchDestReg64: addr						is isRel=0x1 & isDataPresent=0x0 & op1Reg [ addr = op1Reg + inst_next; ] { export *:8 addr; }
+
+
+#Constructors for MOVREL instruction
+MovDest16: addr								is regData16 [ addr = regData16 + inst_next; ] { export *:2 addr; }
+MovDest32: addr								is regData32 [ addr = regData32 + inst_next; ] { export *:4 addr; }
+MovDest64: addr								is regData64 [ addr = regData64 + inst_next; ] { export *:8 addr; }
+
+
+#Conditions constructors for conditional JMP/JMP8 instructions
+Cond:        is isCond=0x0 { }
+Cond: "cs"   is isCond=0x1 & condMod=0x1 { if (!$(C_flag)) goto inst_next; }
+Cond: "cc"   is isCond=0x1 & condMod=0x0 { if ($(C_flag))  goto inst_next; }
+
+Cond2:       is isCond2=0x0 { }
+Cond2: "cs"  is isCond2=0x1 & condMod2=0x1 { if (!$(C_flag)) goto inst_next; }
+Cond2: "cc"  is isCond2=0x1 & condMod2=0x0 { if ($(C_flag))  goto inst_next; }
+
+################################################################
+# Instructions
+################################################################
+
+
+#NOTE: We do not create different constructors for the 32 and 64 variations of most of the instructions - this may be changed one day
+
+#####################################################
+############ ADD Instruction - p. 989 ###############
+#####################################################
+
+
+#ADD32/64 R1, {@}R2
+:ADD^InstType RsDirect, Rd 						is opcode=0xC & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect + Rd;
+}
+
+#ADD32/64 @R1, {@}R2
+:ADD^InstType RsIndirect, Rd 					is opcode=0xC & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect + Rd;
+}
+
+#ADD32/64 R1, {@}R2 (Index16 / Imm16)
+:ADD^InstType RsDirect, Rd16					is (opcode=0xC & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect + Rd16;
+}
+
+#ADD32/64 @R1, {@}R2 (Index16 / Imm16)
+:ADD^InstType RsIndirect, Rd16					is (opcode=0xC & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect + Rd16;
+}
+
+
+
+####################################################
+############ AND Instruction - p.990 ###############
+####################################################
+ 
+#AND32/64 R1, {@}R2
+:AND^InstType RsDirect, Rd 						is opcode=0x14 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect & Rd;
+}
+
+#ANR32/64 @R1, {@}R2
+:AND^InstType RsIndirect, Rd 						is opcode=0x14 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect & Rd;
+}
+
+#AND32/64 R1, {@}R2 (Index16 / Imm16)
+:AND^InstType RsDirect, Rd16						is (opcode=0x14 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 {
+
+
+	RsDirect = RsDirect & Rd16;
+}
+
+#AND32/64 @R1, {@}R2 (Index16 / Imm16)
+:AND^InstType RsIndirect, Rd16						is (opcode=0x14 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect & Rd16;
+}
+
+
+
+#####################################################
+############ ASHR Instruction - p.991 ###############
+##################################################### 
+
+
+#ASHR32/64 R1, {@}R2
+:ASHR^InstType RsDirect, Rd 						is opcode=0x19 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect s>> Rd;
+}
+
+#ASHR32/64 @R1, {@}R2
+:ASHR^InstType RsIndirect, Rd 						is opcode=0x19 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect s>> Rd;
+}
+
+#ASHR32/64 R1, {@}R2 (Index16 / Imm16)
+:ASHR^InstType RsDirect, Rd16						is (opcode=0x19 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 {
+
+
+	RsDirect = RsDirect s>> Rd16;
+}
+
+#ASHR32/64 @R1, {@}R2 (Index16 / Imm16)
+:ASHR^InstType RsIndirect, Rd16						is (opcode=0x19 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect s>> Rd16;
+}
+
+
+
+######################################################
+############ BREAK Instruction - p.992 ###############
+######################################################
+ 
+#BREAK [break code]
+:BREAK brCode												is brOpcode=0x0 & brCode {
+ 	
+ 	#TODO: consider REALLY implementing this instruction
+ 	break(brCode:1); 	
+}
+ 
+ 
+#####################################################
+############ CALL Instruction - p.995 ###############
+#####################################################
+ 
+ 
+:CALL"64"^Ex BranchDest64				is (opcode=0x3 & is64Op=0x1 & Ex) ... & BranchDest64 {
+ 	
+ 	#Update stack pointer and save return address
+ 	push8(&:8 inst_next);
+ 	 
+ 	call BranchDest64;
+ 
+} 
+
+:CALL"64"^Ex BranchDestReg64				is opcode=0x3 & is64Op=0x1 & Ex & BranchDestReg64 {
+ 	
+ 	#Update stack pointer and save return address
+ 	push8(&:8 inst_next);
+ 	 
+ 	call BranchDestReg64;
+ 
+} 
+
+:CALL"32"^Ex ^BranchDest32				is (opcode=0x3 & is64Op=0x0 & Ex) ... & BranchDest32 {
+	
+	#Update stack pointer and save return address
+ 	push8(&:8 inst_next);
+ 	
+ 	call BranchDest32;
+}
+
+
+:CALL"32"^Ex ^BranchDestReg32				is opcode=0x3 & is64Op=0x0 & Ex & BranchDestReg32 {
+	
+	#Update stack pointer and save return address
+ 	push8(&:8 inst_next);
+ 	
+ 	call BranchDestReg32;
+}
+
+
+####################################################
+############ CMP Instruction - p.995 ###############
+####################################################
+
+
+#CMP32|64 eq R1 {@}R2
+:CMP^InstType"eq" op1Reg, Rd			is opcode=0x5 & isDataPresent=0x0 & InstType & op1Reg & Rd   { $(C_flag) = (op1Reg == Rd);  }
+
+#CMP32|64 eq R1 R2 {Imm16 / Index16}			
+:CMP^InstType"eq" op1Reg, Rd16			is (opcode=0x5 & isDataPresent=0x1 & InstType & op1Reg) ... & Rd16 { $(C_flag) = (op1Reg == (Rd16)); }
+
+#CMP32|64 lte R1 {@}R2
+:CMP^InstType"lte" op1Reg, Rd			is opcode=0x6 & isDataPresent=0x0 & InstType &  op1Reg & Rd  { $(C_flag) = (op1Reg s<= Rd); }
+
+#CMP32|64 lte R1 R2 {Imm16 / Index16}			
+:CMP^InstType"lte" op1Reg, Rd16			is (opcode=0x6 & isDataPresent=0x1 & InstType & op1Reg) ... & Rd16 { $(C_flag) = (op1Reg s<= (Rd16)); }
+
+#CMP32|64 gte R1 {@}R2
+:CMP^InstType"gte" op1Reg, Rd			is opcode=0x7 & isDataPresent=0x0 & InstType & op1Reg & Rd   { $(C_flag) = (op1Reg s>= Rd); }
+
+#CMP32|64 gte R1 R2 {Imm16 / Index16}			
+:CMP^InstType"gte" op1Reg, Rd16			is (opcode=0x7 & isDataPresent=0x1 & InstType & op1Reg) ... & Rd16 { $(C_flag) = (op1Reg s>= (Rd16)); }
+
+#CMP32|64 ulte R1 {@}R2
+:CMP^InstType"ulte" op1Reg, Rd			is opcode=0x8 & isDataPresent=0x0 & InstType & op1Reg & Rd   { $(C_flag) = (op1Reg <= Rd);  }
+
+#CMP32|64 ulte R1 R2 {Imm16 / Index16}			
+:CMP^InstType"ulte" op1Reg, Rd16		is (opcode=0x8 & isDataPresent=0x1 & InstType & op1Reg) ... & Rd16 { $(C_flag) = (op1Reg <= (Rd16)); }
+
+#CMP32|64 ugte R1 {@}R2
+:CMP^InstType"ugte" op1Reg, Rd			is opcode=0x9 & isDataPresent=0x0 & InstType & op1Reg & Rd   { $(C_flag) = (op1Reg >= Rd);  }
+
+#CMP32|64 ugte R1 R2 {Imm16 / Index16}			
+:CMP^InstType"ugte" op1Reg, Rd16		is (opcode=0x9 & isDataPresent=0x1 & InstType & op1Reg) ... & Rd16 { $(C_flag) = (op1Reg >= (Rd16)); }
+
+
+#####################################################
+############ CMPI Instruction - p.997 ###############
+#####################################################
+
+#CMPI32|64 weq R1, data16
+:CMPI^InstType"weq" RsDirect, data16		is opcode=0x2D & is32ImmData=0x0 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; data16 { $(C_flag) = (RsDirect == data16);  }
+
+#CMPI32|64 deq R1, data32
+:CMPI^InstType"deq" RsDirect, data32		is opcode=0x2D & is32ImmData=0x1 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; data32 { $(C_flag) = (RsDirect == data32);  }
+
+#CMPI32|64 weq @R1, data16
+:CMPI^InstType"weq" RsIndirect, data16		is opcode=0x2D & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; data16 { $(C_flag) = (RsIndirect == data16);  }
+
+#CMPI32|64 deq @R1, data32
+:CMPI^InstType"deq" RsIndirect, data32		is opcode=0x2D & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; data32 { $(C_flag) = (RsIndirect == data32);  }
+
+#CMPI32|64 weq @R1 Index16, data16			
+:CMPI^InstType"weq" RsIndx16, data16		is (opcode=0x2D & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; data16 { $(C_flag) = (RsIndx16 == zext(data16:2)); }
+
+#CMPI32|64 deq @R1 Index16, data32
+:CMPI^InstType"deq" RsIndx16, data32		is (opcode=0x2D & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; data32 { $(C_flag) = (RsIndx16 == zext(data32:4)); }
+
+#CMPI32|64 wlte R1 regData16
+:CMPI^InstType"wlte" RsDirect, regData16	is opcode=0x2E & is32ImmData=0x0 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; regData16 { $(C_flag) = (RsDirect s<= regData16);  }
+
+#CMPI32|64 dlte R1 regData32
+:CMPI^InstType"dlte" RsDirect, regData32	is opcode=0x2E & is32ImmData=0x1 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; regData32 { $(C_flag) = (RsDirect s<= regData32);  }
+
+#CMPI32|64 wlte @R1, regData16
+:CMPI^InstType"wlte" RsIndirect, regData16	is opcode=0x2E & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; regData16 { $(C_flag) = (RsIndirect <= regData16);  }
+
+#CMPI32|64 dlte @R1, regData32
+:CMPI^InstType"dlte" RsIndirect, regData32	is opcode=0x2E & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; regData32 { $(C_flag) = (RsIndirect <= regData32);  }
+
+#CMPI32|64 wlte @R1 Index16, regData16			
+:CMPI^InstType"wlte" RsIndx16, regData16	is (opcode=0x2E & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; regData16 { $(C_flag) = (RsIndx16 s<= zext(regData16:2)); }
+
+#CMPI32|64 dlte @R1 Index16, regData32
+:CMPI^InstType"dlte" RsIndx16, regData32	is (opcode=0x2E & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; regData32 { $(C_flag) = (RsIndx16 s<= zext(regData32:4)); }
+
+#CMPI32|64 wgte R1 regData16
+:CMPI^InstType"wgte" RsDirect, regData16	is opcode=0x2F & is32ImmData=0x0 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; regData16 { $(C_flag) = (RsDirect s>= regData16);  }
+
+#CMPI32|64 dgte R1 regData32
+:CMPI^InstType"dgte" RsDirect, regData32	is opcode=0x2F & is32ImmData=0x1 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; regData32 { $(C_flag) = (RsDirect s>= regData32);  }
+
+#CMPI32|64 wgte @R1, regData16
+:CMPI^InstType"wgte" RsIndirect, regData16	is opcode=0x2F & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; regData16 { $(C_flag) = (RsIndirect >= regData16);  }
+
+#CMPI32|64 dgte @R1, regData32
+:CMPI^InstType"dgte" RsIndirect, regData32	is opcode=0x2F & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; regData32 { $(C_flag) = (RsIndirect >= regData32);  }
+
+#CMPI32|64 wgte @R1 Index16, regData16			
+:CMPI^InstType"wgte" RsIndx16, regData16	is (opcode=0x2F & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; regData16 { $(C_flag) = (RsIndx16 s>= zext(regData16:2)); }
+
+#CMPI32|64 dgte @R1 Index16, regData32
+:CMPI^InstType"dgte" RsIndx16, regData32	is (opcode=0x2F & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; regData32 { $(C_flag) = (RsIndx16 s>= zext(regData32:4)); }
+
+#CMPI32|64 wulte R1 data16
+:CMPI^InstType"wulte" RsDirect, data16		is opcode=0x30 & is32ImmData=0x0 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; data16 { $(C_flag) = (RsDirect <= data16);  }
+
+#CMPI32|64 dulte R1 data32
+:CMPI^InstType"dulte" RsDirect, data32		is opcode=0x30 & is32ImmData=0x1 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; data32 { $(C_flag) = (RsDirect <= data32);  }
+
+#CMPI32|64 wulte @R1, data16
+:CMPI^InstType"wulte" RsIndirect, data16	is opcode=0x30 & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; data16 { $(C_flag) = (RsIndirect <= data16);  }
+
+#CMPI32|64 dulte @R1, data32
+:CMPI^InstType"dulte" RsIndirect, data32	is opcode=0x30 & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; data32 { $(C_flag) = (RsIndirect <= data32);  }
+
+#CMPI32|64 wulte @R1 Index16, data16			
+:CMPI^InstType"wulte" RsIndx16, data16		is (opcode=0x30 & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; data16 { $(C_flag) = (RsIndx16 <= zext(data16:2)); }
+
+#CMPI32|64 dulte @R1 Index16, data32
+:CMPI^InstType"dulte" RsIndx16, data32		is (opcode=0x30 & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; data32 { $(C_flag) = (RsIndx16 <= zext(data32:4)); }
+
+#CMPI32|64 wugte R1 data16
+:CMPI^InstType"wugte" RsDirect, data16		is opcode=0x31 & is32ImmData=0x0 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; data16 { $(C_flag) = (RsDirect >= data16);  }
+
+#CMPI32|64 dugte R1 data32
+:CMPI^InstType"dugte" RsDirect, data32		is opcode=0x31 & is32ImmData=0x1 & InstType & op1RegMod=0x0 & isIndexPresent=0x0 & RsDirect; data32 { $(C_flag) = (RsDirect >= data32);  }
+
+#CMPI32|64 wugte @R1, data16
+:CMPI^InstType"wugte" RsIndirect, data16	is opcode=0x31 & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; data16 { $(C_flag) = (RsIndirect >= data16);  }
+
+#CMPI32|64 dugte @R1, data32
+:CMPI^InstType"dugte" RsIndirect, data32	is opcode=0x31 & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x0 & RsIndirect; data32 { $(C_flag) = (RsIndirect >= data32);  }
+
+#CMPI32|64 wugte @R1 Index16, data16			
+:CMPI^InstType"wugte" RsIndx16, data16		is (opcode=0x31 & is32ImmData=0x0 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; data16 { $(C_flag) = (RsIndx16 >= zext(data16:2)); }
+
+#CMPI32|64 dugte @R1 Index16, data32
+:CMPI^InstType"dugte" RsIndx16, data32		is (opcode=0x31 & is32ImmData=0x1 & InstType & op1RegMod=0x1 & isIndexPresent=0x1) ... & RsIndx16; data32 { $(C_flag) = (RsIndx16 >= zext(data32:4)); }
+
+
+####################################################
+############ DIV Instruction - p.998 ###############
+####################################################
+
+#DIV32/64 R1, {@}R2
+:DIV^InstType RsDirect, Rd 						is opcode=0x10 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect s/ Rd;
+}
+
+#DIV32/64 @R1, {@}R2
+:DIV^InstType RsIndirect, Rd 						is opcode=0x10 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect s/ Rd;
+}
+
+#DIV32/64 R1, {@}R2 (Index16 / Imm16)
+:DIV^InstType RsDirect, Rd16						is (opcode=0x10 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect s/ Rd16;
+}
+
+#DIV32/64 @R1, {@}R2 (Index16 / Imm16)
+:DIV^InstType RsIndirect, Rd16						is (opcode=0x10 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect s/ Rd16;
+}
+
+
+#####################################################
+############ DIVU Instruction - p.999 ###############
+#####################################################
+
+
+#DIVU32/64 R1, {@}R2
+:DIVU^InstType RsDirect, Rd 						is opcode=0x11 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect / Rd;
+}
+
+#DIVU32/64 @R1, {@}R2
+:DIVU^InstType RsIndirect, Rd 						is opcode=0x11 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect / Rd;
+}
+
+#DIVU32/64 R1, {@}R2 (Index16 / Imm16)
+:DIVU^InstType RsDirect, Rd16						is (opcode=0x11 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect / Rd16;
+}
+
+#DIVU32/64 @R1, {@}R2 (Index16 / Imm16)
+:DIVU^InstType RsIndirect, Rd16						is (opcode=0x11 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect / Rd16;
+}
+
+########################################################
+############ EXTNDB Instruction - p.1000 ###############
+########################################################
+  
+
+#EXTNDB32/64 R1, {@}R2
+:EXTNDB^InstType RsDirect, Rd 						is opcode=0x1A & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = sext(Rd);
+}
+
+#EXTNDB32/64 @R1, {@}R2
+:EXTNDB^InstType RsIndirect, Rd 					is opcode=0x1A & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = sext(Rd);
+}
+
+#EXTNDB32/64 R1, {@}R2 (Index16 / Imm16)
+:EXTNDB^InstType RsDirect, Rd16						is (opcode=0x1A & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = sext(Rd16);
+}
+
+#EXTNDB32/64 @R1, {@}R2 (Index16 / Imm16)
+:EXTNDB^InstType RsIndirect, Rd16					is (opcode=0x1A & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = sext(Rd16);
+} 
+ 
+
+########################################################
+############ EXTNDD Instruction - p.1001 ###############
+########################################################
+ 
+
+#EXTNDD32/64 R1, {@}R2
+:EXTNDD^InstType RsDirect, Rd 						is opcode=0x1C & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = sext(Rd);
+}
+
+#EXTNDD32/64 @R1, {@}R2
+:EXTNDD^InstType RsIndirect, Rd 					is opcode=0x1C & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = sext(Rd);
+}
+
+#EXTNDD32/64 R1, {@}R2 (Index16 / Imm16)
+:EXTNDD^InstType RsDirect, Rd16						is (opcode=0x1C & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = sext(Rd16);
+}
+
+#EXTNDD32/64 @R1, {@}R2 (Index16 / Imm16)
+:EXTNDD^InstType RsIndirect, Rd16					is (opcode=0x1C & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = sext(Rd16);
+} 
+
+########################################################
+############ EXTNDW Instruction - p.1002 ###############
+########################################################
+ 
+
+#EXTNDW32/64 R1, {@}R2
+:EXTNDW^InstType RsDirect, Rd 						is opcode=0x1B & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = sext(Rd);
+}
+
+#EXTNDW32/64 @R1, {@}R2
+:EXTNDW^InstType RsIndirect, Rd 					is opcode=0x1B & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = sext(Rd);
+}
+
+#EXTNDW32/64 R1, {@}R2 (Index16 / Imm16)
+:EXTNDW^InstType RsDirect, Rd16						is (opcode=0x1B & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = sext(Rd16);
+}
+
+#EXTNDW32/64 @R1, {@}R2 (Index16 / Imm16)
+:EXTNDW^InstType RsIndirect, Rd16					is (opcode=0x1B & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = sext(Rd16);
+} 
+
+ 
+ 
+#####################################################
+############ JMP Instruction - p.1003 ###############
+#####################################################
+
+:JMP"32"^Cond BranchDest32 								is (opcode=0x1 & is64Op=0x0 & Cond) ... & BranchDest32 {
+	
+	#Check for condition
+	build Cond;
+	
+	#Perform branch to BranchDest
+    goto BranchDest32;
+}
+
+
+:JMP"32"^Cond BranchDestReg32 								is opcode=0x1 & is64Op=0x0 & Cond & BranchDestReg32 {
+	
+	#Check for condition
+	build Cond;
+	
+	#Perform branch to BranchDest
+    goto [BranchDestReg32];
+}
+
+:JMP"64"^Cond BranchDest64								is (opcode=0x1 & is64Op=0x1 & Cond) ... & BranchDest64 {
+	
+	#Check for condition
+	build Cond;
+	
+	#Perform branch to address data64
+	goto BranchDest64;
+} 
+
+:JMP"64"^Cond BranchDestReg64								is opcode=0x1 & is64Op=0x1 & Cond & BranchDestReg64 {
+	
+	#Check for condition
+	build Cond;
+	
+	#Perform branch to address data64
+	goto [BranchDestReg64];
+}
+
+
+######################################################
+############ JMP8 Instruction - p.1004 ###############
+######################################################
+
+
+:JMP8^Cond2 Jmp8Dest									is opcode=0x2 & Cond2 & Jmp8Dest {
+	
+	#Check for condition
+	build Cond2;
+	
+	#Branch to Jmp8Dest
+	goto Jmp8Dest;
+} 
+
+########################################################
+############ LOADSP Instruction - p.1005 ###############
+########################################################
+
+#TODO: Validate that the reserved bits in the FLAGS register are not modified - See p.1005, paragraph 3 in the Restrictions section.
+:LOADSP dedcReg1, op2Reg 										is opcode=0x29 & dedcReg1 & op2Reg {
+	
+	dedcReg1 = op2Reg;
+}
+
+
+
+######################################################
+############ MOD Instruction  - p.1005 ###############
+######################################################
+ 
+
+
+#MOD32/64 R1, {@}R2
+:MOD^InstType RsDirect, Rd 						is opcode=0x12 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect s% Rd;
+}
+
+#MOD32/64 @R1, {@}R2
+:MOD^InstType RsIndirect, Rd 						is opcode=0x12 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect s% Rd;
+}
+
+#MOD32/64 R1, {@}R2 (Index16 / Imm16)
+:MOD^InstType RsDirect, Rd16						is (opcode=0x12 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect s% Rd16;
+}
+
+#MOD32/64 @R1, {@}R2 (Index16 / Imm16)
+:MOD^InstType RsIndirect, Rd16						is (opcode=0x12 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect s% Rd16;
+}
+
+
+
+######################################################
+############ MODU Instruction - p.1006 ###############
+######################################################
+ 
+
+#MODU32/64 R1, {@}R2
+:MODU^InstType RsDirect, Rd 						is opcode=0x13 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect % Rd;
+}
+
+#MODU32/64 @R1, {@}R2
+:MODU^InstType RsIndirect, Rd 						is opcode=0x13 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect % Rd;
+}
+
+#MODU32/64 R1, {@}R2 (Index16 / Imm16)
+:MODU^InstType RsDirect, Rd16						is (opcode=0x13 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect % Rd16;
+}
+
+#MODU32/64 @R1, {@}R2 (Index16 / Imm16)
+:MODU^InstType RsIndirect, Rd16						is (opcode=0x13 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect % Rd16;
+}
+
+#####################################################
+############ MOV Instruction - p.1007 ###############
+#####################################################
+
+#MOVbw R1, {@}R2
+:MOVbw MovRsDirect, MovRd			is opcode=0x1D & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = zext(MovRd:1);
+}
+
+#MOVbw R1, @R2 Index16
+:MOVbw MovRsDirect, MovRd16			is (opcode=0x1D & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd16 { 
+	
+	MovRsDirect = zext(MovRd16:1);
+}
+
+#MOVbw @R1, {@}R2
+:MOVbw MovRsIndirect, MovRd			is opcode=0x1D & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = zext(MovRd:1);
+}
+
+#MOVbw @R1, @R2 Index16
+:MOVbw MovRsIndirect, MovRd16		is (opcode=0x1D & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd16 { 
+	
+	MovRsIndirect = zext(MovRd16:1);
+} 
+
+#MOVbw @R1 Index16, {@}R2
+:MOVbw MovRsIndx16, MovRd			is (opcode=0x1D & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx16 { 
+	
+	MovRsIndx16 = zext(MovRd:1);
+}
+
+#MOVbw @R1 Index16, @R2 Index16
+:MOVbw MovRsIndx16, MovRd16			is ((opcode=0x1D & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx16) ... & MovRd16 { 
+	
+	MovRsIndx16 = zext(MovRd16:1);
+}
+
+#MOVww R1, {@}R2
+:MOVww MovRsDirect, MovRd			is opcode=0x1E & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = zext(MovRd:2);
+}
+
+#MOVww R1, @R2 Index16
+:MOVww MovRsDirect, MovRd16			is (opcode=0x1E & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd16 { 
+	
+	MovRsDirect = zext(MovRd16:2);
+}
+
+#MOVww @R1, {@}R2
+:MOVww MovRsIndirect, MovRd			is opcode=0x1E & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = zext(MovRd:2);
+}
+
+#MOVww @R1, @R2 Index16
+:MOVww MovRsIndirect, MovRd16		is (opcode=0x1E & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd16 { 
+	
+	MovRsIndirect = zext(MovRd16:2);
+} 
+
+#MOVww @R1 Index16, {@}R2
+:MOVww MovRsIndx16, MovRd			is (opcode=0x1E & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx16 { 
+	
+	MovRsIndx16 = zext(MovRd:2);
+}
+
+#MOVww @R1 Index16, @R2 Index16
+:MOVww MovRsIndx16, MovRd16			is ((opcode=0x1E & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx16) ... & MovRd16 { 
+	
+	MovRsIndx16 = zext(MovRd16:2);
+}
+
+#MOVdw R1, {@}R2
+:MOVdw MovRsDirect, MovRd			is opcode=0x1F & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = zext(MovRd:4);
+}
+
+#MOVdw R1, @R2 Index16
+:MOVdw MovRsDirect, MovRd16			is (opcode=0x1F & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd16 { 
+	
+	MovRsDirect = zext(MovRd16:4);
+}
+
+#MOVdw @R1, {@}R2
+:MOVdw MovRsIndirect, MovRd			is opcode=0x1F & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = zext(MovRd:4);
+}
+
+#MOVdw @R1, @R2 Index16
+:MOVdw MovRsIndirect, MovRd16		is (opcode=0x1F & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd16 { 
+	
+	MovRsIndirect = zext(MovRd16:4);
+} 
+
+#MOVdw @R1 Index16, {@}R2
+:MOVdw MovRsIndx16, MovRd			is (opcode=0x1F & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx16 { 
+	
+	MovRsIndx16 = zext(MovRd:4);
+}
+
+#MOVdw @R1 Index16, @R2 Index16
+:MOVdw MovRsIndx16, MovRd16			is ((opcode=0x1F & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx16) ... & MovRd16 { 
+	
+	MovRsIndx16 = zext(MovRd16:4);
+}
+
+#MOVqw R1, {@}R2
+:MOVqw MovRsDirect, MovRd			is opcode=0x20 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = MovRd;
+}
+
+#MOVqw R1, @R2 Index16
+:MOVqw MovRsDirect, MovRd16			is (opcode=0x20 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd16 { 
+	
+	MovRsDirect = zext(MovRd16:8);
+}
+
+#MOVqw @R1, {@}R2
+:MOVqw MovRsIndirect, MovRd			is opcode=0x20 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = MovRd;
+}
+
+#MOVqw @R1, @R2 Index16
+:MOVqw MovRsIndirect, MovRd16		is (opcode=0x20 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd16 { 
+	
+	MovRsIndirect = MovRd16:8;
+} 
+
+#MOVqw @R1 Index16, {@}R2
+:MOVqw MovRsIndx16, MovRd			is (opcode=0x20 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx16 { 
+	
+	MovRsIndx16 = MovRd;
+}
+
+#MOVqw @R1 Index16, @R2 Index16
+:MOVqw MovRsIndx16, MovRd16			is ((opcode=0x20 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx16) ... & MovRd16 { 
+	
+	MovRsIndx16 = MovRd16:8;
+}
+
+#MOVbd R1, {@}R2
+:MOVbd MovRsDirect, MovRd			is opcode=0x21 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = zext(MovRd:1);
+}
+
+#MOVbd R1, @R2 Index32
+:MOVbd MovRsDirect, MovRd32			is (opcode=0x21 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd32 { 
+	
+	MovRsDirect = zext(MovRd32:1);
+}
+
+#MOVbd @R1, {@}R2
+:MOVbd MovRsIndirect, MovRd			is opcode=0x21 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = zext(MovRd:1);
+}
+
+#MOVbd @R1, @R2 Index32
+:MOVbd MovRsIndirect, MovRd32		is (opcode=0x21 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd32 { 
+	
+	MovRsIndirect = zext(MovRd32:1);
+} 
+
+#MOVbd @R1 Index32, {@}R2
+:MOVbd MovRsIndx32, MovRd			is (opcode=0x21 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx32 { 
+	
+	MovRsIndx32 = zext(MovRd:1);
+}
+
+#MOVbd @R1 Index32, @R2 Index32
+:MOVbd MovRsIndx32, MovRd32			is ((opcode=0x21 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx32) ... & MovRd32 { 
+	
+	MovRsIndx32 = zext(MovRd32:1);
+}
+
+#MOVwd R1, {@}R2
+:MOVwd MovRsDirect, MovRd			is opcode=0x22 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = zext(MovRd:2);
+}
+
+#MOVwd R1, @R2 Index32
+:MOVwd MovRsDirect, MovRd32			is (opcode=0x22 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd32 { 
+	
+	MovRsDirect = zext(MovRd32:2);
+}
+
+#MOVwd @R1, {@}R2
+:MOVwd MovRsIndirect, MovRd			is opcode=0x22 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = zext(MovRd:2);
+}
+
+#MOVwd @R1, @R2 Index32
+:MOVwd MovRsIndirect, MovRd32		is (opcode=0x22 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd32 { 
+	
+	MovRsIndirect = zext(MovRd32:2);
+} 
+
+#MOVwd @R1 Index32, {@}R2
+:MOVwd MovRsIndx32, MovRd			is (opcode=0x22 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx32 { 
+	
+	MovRsIndx32 = zext(MovRd:2);
+}
+
+#MOVwd @R1 Index32, @R2 Index32
+:MOVwd MovRsIndx32, MovRd32			is ((opcode=0x22 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx32) ... & MovRd32 { 
+	
+	MovRsIndx32 = zext(MovRd32:2);
+}
+
+#MOVdd R1, {@}R2
+:MOVdd MovRsDirect, MovRd			is opcode=0x23 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = zext(MovRd:4);
+}
+
+#MOVdd R1, @R2 Index32
+:MOVdd MovRsDirect, MovRd32			is (opcode=0x23 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd32 { 
+	
+	MovRsDirect = zext(MovRd32:4);
+}
+
+#MOVdd @R1, {@}R2
+:MOVdd MovRsIndirect, MovRd			is opcode=0x23 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = zext(MovRd:4);
+}
+
+#MOVdd @R1, @R2 Index32
+:MOVdd MovRsIndirect, MovRd32		is (opcode=0x23 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd32 { 
+	
+	MovRsIndirect = zext(MovRd32:4);
+} 
+
+#MOVdd @R1 Index32, {@}R2
+:MOVdd MovRsIndx32, MovRd			is (opcode=0x23 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx32 { 
+	
+	MovRsIndx32 = zext(MovRd:4);
+}
+
+#MOVdd @R1 Index32, @R2 Index32
+:MOVdd MovRsIndx32, MovRd32			is ((opcode=0x23 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx32) ... & MovRd32 { 
+	
+	MovRsIndx32 = zext(MovRd32:4);
+}
+
+#MOVqd R1, {@}R2
+:MOVqd MovRsDirect, MovRd			is opcode=0x24 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = MovRd;
+}
+
+#MOVqd R1, @R2 Index32
+:MOVqd MovRsDirect, MovRd32			is (opcode=0x24 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd32 { 
+	
+	MovRsDirect = MovRd32:8;
+}
+
+#MOVqd @R1, {@}R2
+:MOVqd MovRsIndirect, MovRd			is opcode=0x24 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = MovRd:8;
+}
+
+#MOVqd @R1, @R2 Index32
+:MOVqd MovRsIndirect, MovRd32		is (opcode=0x24 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd32 { 
+	
+	MovRsIndirect = MovRd32:8;
+} 
+
+#MOVqd @R1 Index32, {@}R2
+:MOVqd MovRsIndx32, MovRd			is (opcode=0x24 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx32 { 
+	
+	MovRsIndx32 = MovRd:8;
+}
+
+#MOVqd @R1 Index32, @R2 Index32
+:MOVqd MovRsIndx32, MovRd32			is ((opcode=0x24 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx32) ... & MovRd32 { 
+	
+	MovRsIndx32 = MovRd32:8;
+}
+
+#MOVqq R1, {@}R2
+:MOVqq MovRsDirect, MovRd			is opcode=0x28 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsDirect & MovRd { 
+	
+	MovRsDirect = MovRd;
+}
+
+#MOVqq R1, @R2 Index64
+:MOVqq MovRsDirect, MovRd64			is (opcode=0x28 & op1RegMod=0x0 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsDirect) ... & MovRd64 { 
+	
+	MovRsDirect = MovRd64:8;
+}
+
+#MOVqq @R1, {@}R2
+:MOVqq MovRsIndirect, MovRd			is opcode=0x28 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & MovRsIndirect & MovRd { 
+	
+	MovRsIndirect = MovRd:8;
+}
+
+#MOVqq @R1, @R2 Index64
+:MOVqq MovRsIndirect, MovRd64		is (opcode=0x28 & op1RegMod=0x1 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & MovRsIndirect) ... & MovRd64 { 
+	
+	MovRsIndirect = MovRd64:8;
+} 
+
+#MOVqq @R1 Index64, {@}R2
+:MOVqq MovRsIndx64, MovRd			is (opcode=0x28 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & MovRd) ... & MovRsIndx64 { 
+	
+	MovRsIndx64 = MovRd:8;
+}
+
+#MOVqq @R1 Index64, @R2 Index64
+:MOVqq MovRsIndx64, MovRd64			is ((opcode=0x28 & op1RegMod=0x1 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1) ... & MovRsIndx64) ... & MovRd64 { 
+	
+	MovRsIndx64 = MovRd64:8;
+}
+
+
+
+######################################################
+############ MOVI Instruction - p.1009 ###############
+######################################################
+
+
+#MOVIbw R1, regData16
+:MOVIbw RsDirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x0 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData16 { 
+	
+	RsDirect = sext(regData16:1);
+}
+
+#MOVIbw @R1, regData16
+:MOVIbw RsIndirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x0 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData16 { 
+	
+	RsIndirect = sext(regData16:1);
+}
+
+#MOVIbw @R1 Index16, regData16`
+:MOVIbw RsIndx16, regData16		is (opcode=0x37 & immDataSize=0x1 & movType=0x0 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx16; regData16 { 
+	
+	RsIndx16 = sext(regData16:1);
+}
+
+#MOVIbd R1, regData32
+:MOVIbd RsDirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x0 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData32 { 
+	
+	RsDirect = sext(regData32:1);
+}
+
+#MOVIbd @R1, regData32
+:MOVIbd RsIndirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x0 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData32 { 
+	
+	RsIndirect = sext(regData32:1);
+}
+
+#MOVIbd @R1 Index32, regData32`
+:MOVIbd RsIndx32, regData32		is (opcode=0x37 & immDataSize=0x2 & movType=0x0 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx32; regData32 { 
+	
+	RsIndx32 = sext(regData32:1);
+}
+
+#MOVIbq R1, regData64
+:MOVIbq RsDirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x0 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData64 { 
+	
+	RsDirect = sext(regData64:1);
+}
+
+#MOVIbq @R1, regData64
+:MOVIbq RsIndirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x0 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData64 { 
+	
+	RsIndirect = sext(regData64:1);
+}
+
+#MOVIbq @R1 Index64, regData64`
+:MOVIbq RsIndx64, regData64		is (opcode=0x37 & immDataSize=0x3 & movType=0x0 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx64; regData64 { 
+	
+	RsIndx64 = sext(regData64:1);
+}
+
+#MOVIww R1, regData16
+:MOVIww RsDirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x1 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData16 { 
+	
+	RsDirect = sext(regData16:2);
+}
+
+#MOVIww @R1, regData16
+:MOVIww RsIndirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x1 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData16 { 
+	
+	RsIndirect = sext(regData16:2);
+}
+
+#MOVIww @R1 Index16, regData16`
+:MOVIww RsIndx16, regData16		is (opcode=0x37 & immDataSize=0x1 & movType=0x1 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx16; regData16 { 
+	
+	RsIndx16 = sext(regData16:2);
+}
+
+#MOVIwd R1, regData32
+:MOVIwd RsDirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x1 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData32 { 
+	
+	RsDirect = sext(regData32:2);
+}
+
+#MOVIwd @R1, regData32
+:MOVIwd RsIndirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x1 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData32 { 
+	
+	RsIndirect = sext(regData32:2);
+}
+
+
+#MOVIwd @R1 Index32, regData32`
+:MOVIwd RsIndx32, regData32		is (opcode=0x37 & immDataSize=0x2 & movType=0x1 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx32; regData32 { 
+	
+	RsIndx32 = sext(regData32:2);
+}
+
+#MOVIwq R1, regData64
+:MOVIwq RsDirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x1 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData64 { 
+	
+	RsDirect = sext(regData64:2);
+}
+
+#MOVIwq @R1, regData64
+:MOVIwq RsIndirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x1 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData64 { 
+	
+	RsIndirect = sext(regData64:2);
+}
+
+#MOVIwq @R1 Index64, regData64`
+:MOVIwq RsIndx64, regData64		is (opcode=0x37 & immDataSize=0x3 & movType=0x1 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx64; regData64 { 
+	
+	RsIndx64 = sext(regData64:2);
+}
+
+#MOVIdw R1, regData16
+:MOVIdw RsDirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x2 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData16 { 
+	
+	RsDirect = sext(regData16:2);
+}
+
+#MOVIdw @R1, regData16
+:MOVIdw RsIndirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x2 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData16 { 
+	
+	RsIndirect = sext(regData16:2);
+}
+
+#MOVIdw @R1 Index16, regData16`
+:MOVIdw RsIndx16, regData16		is (opcode=0x37 & immDataSize=0x1 & movType=0x2 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx16; regData16 { 
+	
+	RsIndx16 = sext(regData16:2);
+}
+
+#MOVIdd R1, regData32
+:MOVIdd RsDirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x2 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData32 { 
+	
+	RsDirect = sext(regData32:4);
+}
+
+#MOVIdd @R1, regData32
+:MOVIdd RsIndirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x2 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData32 { 
+	
+	RsIndirect = sext(regData32:4);
+}
+
+#MOVIdd @R1 Index32, regData32`
+:MOVIdd RsIndx32, regData32		is (opcode=0x37 & immDataSize=0x2 & movType=0x2 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx32; regData32 { 
+	
+	RsIndx32 = sext(regData32:4);
+}
+
+#MOVIdq R1, regData64
+:MOVIdq RsDirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x2 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData64 { 
+	
+	RsDirect = sext(regData64:4);
+}
+
+#MOVIdq @R1, regData64
+:MOVIdq RsIndirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x2 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData64 { 
+	
+	RsIndirect = sext(regData64:4);
+}
+
+#MOVIdq @R1 Index64, regData64`
+:MOVIdq RsIndx64, regData64		is (opcode=0x37 & immDataSize=0x3 & movType=0x2 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx64; regData64 { 
+	
+	RsIndx64 = sext(regData64:4);
+}
+
+#MOVIqw R1, regData16
+:MOVIqw RsDirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x3 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData16 { 
+	
+	RsDirect = sext(regData16:2);
+}
+
+#MOVIqw @R1, regData16
+:MOVIqw RsIndirect, regData16		is opcode=0x37 & immDataSize=0x1 & movType=0x3 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData16 { 
+	
+	RsIndirect = sext(regData16:2);
+}
+
+#MOVIqw @R1 Index16, regData16`
+:MOVIqw RsIndx16, regData16		is (opcode=0x37 & immDataSize=0x1 & movType=0x3 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx16; regData16 { 
+	
+	RsIndx16 = sext(regData16:2);
+}
+
+#MOVIqd R1, regData32
+:MOVIqd RsDirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x3 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData32 { 
+	
+	RsDirect = sext(regData32:4);
+}
+
+#MOVIqd @R1, regData32
+:MOVIqd RsIndirect, regData32		is opcode=0x37 & immDataSize=0x2 & movType=0x3 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData32 { 
+	
+	RsIndirect = sext(regData32:4);
+}
+
+#MOVIqd @R1 Index32, regData32`
+:MOVIqd RsIndx32, regData32		is (opcode=0x37 & immDataSize=0x2 & movType=0x3 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx32; regData32 { 
+	
+	RsIndx32 = sext(regData32:4);
+}
+
+#MOVIqq R1, regData64
+:MOVIqq RsDirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x3 & op1RegMod=0x0 & isOp1IndexPresent2=0x0 & RsDirect; regData64 { 
+	
+	RsDirect = regData64;
+}
+
+#MOVIqq @R1, regData64
+:MOVIqq RsIndirect, regData64		is opcode=0x37 & immDataSize=0x3 & movType=0x3 & op1RegMod=0x1 & isOp1IndexPresent2=0x0 & RsIndirect; regData64 { 
+	
+	RsIndirect = regData64;
+}
+
+#MOVIqq @R1 Index64, regData64`
+:MOVIqq RsIndx64, regData64		is (opcode=0x37 & immDataSize=0x3 & movType=0x3 & op1RegMod=0x1 & isOp1IndexPresent2=0x1) ... & RsIndx64; regData64 { 
+	
+	RsIndx64 = regData64;
+}
+
+
+
+#######################################################
+############ MOVIn Instruction - p.1010 ###############
+#######################################################
+
+#MOVInw R1, Index16
+:MOVInw RsDirect, DestOffset16		is opcode=0x38 & immDataSize=0x1 & isOp1IndexPresent2=0x0 & op1RegMod=0x0 & RsDirect; destIndexData16 [ DestOffset16 = $(DestOffset16); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset16:2);
+	RsDirect = sext(val);
+}
+
+#MOVInw @R1, Index16
+:MOVInw RsIndirect, DestOffset16		is opcode=0x38 & immDataSize=0x1 & isOp1IndexPresent2=0x0 & op1RegMod=0x1 & RsIndirect; destIndexData16 [ DestOffset16 = $(DestOffset16); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset16:2);
+	RsIndirect = sext(val);
+}
+
+#MOVInw @R1 Index16, Index16
+:MOVInw RsIndx16, DestOffset16		is (opcode=0x38 & immDataSize=0x1 & isOp1IndexPresent2=0x1 & op1RegMod=0x1) ... & RsIndx16; destIndexData16  [ DestOffset16 = $(DestOffset16); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset16:2);
+	RsIndx16 = sext(val);
+}
+
+#MOVInw R1, Index32
+:MOVInw RsDirect, DestOffset32		is opcode=0x38 & immDataSize=0x2 & isOp1IndexPresent2=0x0 & op1RegMod=0x0 & RsDirect; destIndexData32  [ DestOffset32 = $(DestOffset32); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset32:4);
+	RsDirect = sext(val);
+}
+
+#MOVInw @R1, Index32
+:MOVInw RsIndirect, DestOffset32		is opcode=0x38 & immDataSize=0x2 & isOp1IndexPresent2=0x0 & op1RegMod=0x1 & RsIndirect; destIndexData32  [ DestOffset32 = $(DestOffset32); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset32:4);
+	RsIndirect = sext(val);
+}
+
+#MOVInw @R1 Index32, Index32
+:MOVInw RsIndx32, DestOffset32		is (opcode=0x38 & immDataSize=0x2 & isOp1IndexPresent2=0x1 & op1RegMod=0x1) ... & RsIndx32; destIndexData32  [ DestOffset32 = $(DestOffset32); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset32:4);
+	RsIndx32 = sext(val);
+}
+
+#MOVInw R1, Index64
+:MOVInw RsDirect, DestOffset64		is opcode=0x38 & immDataSize=0x3 & isOp1IndexPresent2=0x0 & op1RegMod=0x0 & RsDirect; destIndexData64  [ DestOffset64 = $(DestOffset64); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset64:8);
+	RsDirect = sext(val);
+}
+
+#MOVInq @R1, Index64
+:MOVInq RsIndirect, DestOffset64		is opcode=0x38 & immDataSize=0x3 & isOp1IndexPresent2=0x0 & op1RegMod=0x1 & RsIndirect; destIndexData64  [ DestOffset64 = $(DestOffset64); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset64:8);
+	RsIndirect = sext(val);
+}
+
+#MOVInq @R1 Index64, Index64
+:MOVInq RsIndx64, DestOffset64		is (opcode=0x38 & immDataSize=0x3 & isOp1IndexPresent2=0x1 & op1RegMod=0x1) ... & RsIndx64; destIndexData64  [ DestOffset64 = $(DestOffset64); ] { 
+	
+	local val:$(SIZEOFNATURAL) = zext(DestOffset64:8);
+	RsIndx64 = sext(val);
+}
+
+
+######################################################
+############ MOVn Instruction - p.1011 ###############
+######################################################
+
+#MOVnw R1,{@}R2
+:MOVnw RsDirect, Rd				is opcode=0x32 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & op1RegMod=0x0 & RsDirect & Rd { 
+	
+	RsDirect = zext(Rd:$(SIZEOFNATURAL));
+}
+ 
+#MOVnw R1, @R2 Index16
+:MOVnw RsDirect, Rd16			is (opcode=0x32 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & op1RegMod=0x0 & RsDirect) ... & Rd16  { 
+	
+	RsDirect = zext(Rd16:$(SIZEOFNATURAL));
+}
+
+#MOVnw @R1,{@}R2
+:MOVnw RsIndirect, Rd			is opcode=0x32 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & op1RegMod=0x1 & RsIndirect & Rd { 
+	
+	RsIndirect = zext(Rd:$(SIZEOFNATURAL));
+}
+
+#MOVnw @R1, @R2 Index16
+:MOVnw RsIndirect, Rd16			is (opcode=0x32 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & op1RegMod=0x1 & RsIndirect) ... & Rd16 { 
+	
+	RsIndirect = zext(Rd16:$(SIZEOFNATURAL));
+}
+
+#MOVnw @R1 Index16,{@}R2
+:MOVnw RsIndx16, Rd				is (opcode=0x32 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & op1RegMod=0x1 & Rd) ... & RsIndx16 { 
+	
+	RsIndx16 = zext(Rd:$(SIZEOFNATURAL));
+}
+
+#MOVnw @R1 Index16, @R2 Index16
+:MOVnw RsIndx16, Rd16			is ((opcode=0x32 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1 & op1RegMod=0x1) ... & RsIndx16) ... & Rd16 { 
+	
+	RsIndx16 = zext(Rd16:$(SIZEOFNATURAL));
+}
+
+#MOVnd R1,{@}R2
+:MOVnd RsDirect, Rd				is opcode=0x33 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & op1RegMod=0x0 & RsDirect & Rd { 
+	
+	RsDirect = zext(Rd:$(SIZEOFNATURAL));
+}
+ 
+#MOVnd R1, @R2 Index32
+:MOVnd RsDirect, Rd32			is (opcode=0x33 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & op1RegMod=0x0 & RsDirect) ... & Rd32 { 
+	
+	RsDirect = zext(Rd32:$(SIZEOFNATURAL));
+}
+
+#MOVnd @R1,{@}R2
+:MOVnd RsIndirect, Rd			is opcode=0x33 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x0 & op1RegMod=0x1 & RsIndirect & Rd { 
+	
+	RsIndirect = zext(Rd:$(SIZEOFNATURAL));
+}
+
+#MOVnd @R1, @R2 Index32
+:MOVnd RsIndirect, Rd32			is (opcode=0x33 & isOp1IndexPresent=0x0 & isOp2IndexPresent=0x1 & op1RegMod=0x1 & RsIndirect) ... & Rd32 { 
+	
+	RsIndirect = zext(Rd32:$(SIZEOFNATURAL));
+}
+
+#MOVnd @R1 Index32,{@}R2
+:MOVnd RsIndx32, Rd				is (opcode=0x33 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x0 & op1RegMod=0x1 & Rd) ... & RsIndx32 { 
+	
+	RsIndx32 = zext(Rd:$(SIZEOFNATURAL));
+}
+
+#MOVnd @R1 Index32, @R2 Index32
+:MOVnd RsIndx32, Rd32			is ((opcode=0x33 & isOp1IndexPresent=0x1 & isOp2IndexPresent=0x1 & op1RegMod=0x1) ... & RsIndx32) ... & Rd32 { 
+	
+	RsIndx32 = zext(Rd32:$(SIZEOFNATURAL));
+}
+
+
+
+########################################################
+############ MOVREL Instruction - p.1012 ###############
+########################################################
+
+#MOVRELw R1, MovDest16
+:MOVRELw RsDirect, MovDest16		is opcode=0x39 & immDataSize=0x1 & isOp1IndexPresent2=0x0 & op1RegMod=0x0 & RsDirect; MovDest16 {
+	
+	local val:8 = &MovDest16;
+	RsDirect = val;
+}
+
+#MOVRELw @R1, MovDest16
+:MOVRELw RsIndirect, MovDest16		is opcode=0x39 & immDataSize=0x1 & isOp1IndexPresent2=0x0 & op1RegMod=0x1 & RsIndirect; MovDest16 { 
+	
+	RsIndirect = zext(MovDest16);
+}
+
+#MOVRELw @R1 Index16, MovDest16
+:MOVRELw RsIndx16, MovDest16		is (opcode=0x39 & immDataSize=0x1 & isOp1IndexPresent2=0x1 & op1RegMod=0x1) ... & RsIndx16; MovDest16 { 
+	
+	RsIndx16 = zext(MovDest16);
+}
+
+#MOVRELd R1, MovDest32
+:MOVRELd RsDirect, MovDest32		is opcode=0x39 & immDataSize=0x2 & isOp1IndexPresent2=0x0 & op1RegMod=0x0 & RsDirect; MovDest32 { 
+	
+	RsDirect = zext(MovDest32);
+}
+
+#MOVRELd @R1, MovDest32
+:MOVRELd RsIndirect, MovDest32		is opcode=0x39 & immDataSize=0x2 & isOp1IndexPresent2=0x0 & op1RegMod=0x1 & RsIndirect; MovDest32 {
+	
+	RsIndirect = zext(MovDest32);
+}
+
+#MOVRELd @R1 Index16, MovDest32
+:MOVRELd RsIndx16, MovDest32		is (opcode=0x39 & immDataSize=0x2 & isOp1IndexPresent2=0x1 & op1RegMod=0x1) ... & RsIndx16; MovDest32 { 
+	
+	RsIndx16 = zext(MovDest32);
+}
+
+#MOVRELq R1, MovData64
+:MOVRELq RsDirect, MovDest64		is opcode=0x39 & immDataSize=0x3 & isOp1IndexPresent2=0x0 & op1RegMod=0x0 & RsDirect; MovDest64 { 
+	
+	RsDirect = zext(MovDest64);
+}
+
+#MOVRELq @R1, MovData64
+:MOVRELq RsIndirect, MovDest64		is opcode=0x39 & immDataSize=0x3 & isOp1IndexPresent2=0x0 & op1RegMod=0x1 & RsIndirect; MovDest64 { 
+	
+	RsIndirect = zext(MovDest64);
+}
+
+#MOVRELq @R1 Index16, MovData64
+:MOVRELq RsIndx16, MovDest64		is (opcode=0x39 & immDataSize=0x3 & isOp1IndexPresent2=0x1 & op1RegMod=0x1) ... & RsIndx16; MovDest64 { 
+	
+	RsIndx16 = zext(MovDest64);
+}
+
+
+#######################################################
+############ MOVsn Instruction - p.1013 ###############
+#######################################################
+
+
+#MOVsnw R1, {@}R2
+:MOVsnw RsDirect, Rd			is opcode=0x25 & isOp1IndexPresent=0x0 & isDataPresent2=0x0 & op1RegMod=0x0 & RsDirect & Rd {
+	
+	RsDirect = sext(Rd);
+	
+}
+
+#MOVsnw R1, @R2 Index16
+:MOVsnw RsDirect, Rd16			is (opcode=0x25 & isOp1IndexPresent=0x0 & isDataPresent2=0x1 & op1RegMod=0x0 & RsDirect) ... & Rd16 {
+	
+	RsDirect = sext(Rd16);
+}
+
+#MOVsnw @R1, {@}R2
+:MOVsnw RsIndirect, Rd			is opcode=0x25 & isOp1IndexPresent=0x0 & isDataPresent2=0x0 & op1RegMod=0x1 & RsIndirect & Rd {
+	
+	RsIndirect = sext(Rd);
+}
+
+#MOVsnw @R1, @R2 Index16
+:MOVsnw	RsIndirect, Rd16		is (opcode=0x25 & isOp1IndexPresent=0x0 & isDataPresent2=0x1 & op1RegMod=0x1 & RsIndirect) ... & Rd16 {
+	
+	RsIndirect = sext(Rd16);
+}
+
+#MOVsnw @R1 Index16, {@}R2
+:MOVsnw RsIndx16, Rd			is (opcode=0x25 & isOp1IndexPresent=0x1 & isDataPresent2=0x0 & op1RegMod=0x1 & Rd) ... & RsIndx16 {
+	
+	RsIndx16 = sext(Rd);
+}
+ 
+#MOVsnw @R1 Index16, @R2 Index16
+:MOVsnw RsIndx16, Rd16			is ((opcode=0x25 & isOp1IndexPresent=0x1 & isDataPresent2=0x1 & op1RegMod=0x1) ... & RsIndx16) ... & Rd16 {
+	
+	RsIndx16 = sext(Rd16);
+}
+
+#MOVsnd R1, {@}R2
+:MOVsnd RsDirect, Rd			is opcode=0x26 & isOp1IndexPresent=0x0 & isDataPresent2=0x0 & op1RegMod=0x0 & RsDirect & Rd {
+	
+	RsDirect = sext(Rd);
+}
+
+#MOVsnd R1, @R2 Index32
+:MOVsnd RsDirect, Rd32			is (opcode=0x26 & isOp1IndexPresent=0x0 & isDataPresent2=0x1 & op1RegMod=0x0 & RsDirect) ... & Rd32 {
+	
+	RsDirect = sext(Rd32);
+}
+
+#MOVsnd @R1, {@}R2
+:MOVsnd RsIndirect, Rd			is opcode=0x26 & isOp1IndexPresent=0x0 & isDataPresent2=0x0 & op1RegMod=0x1 & RsIndirect & Rd {
+	
+	RsIndirect = sext(Rd);
+}
+
+#MOVsnd @R1, @R2 Index32
+:MOVsnd	RsIndirect, Rd32		is (opcode=0x26 & isOp1IndexPresent=0x0 & isDataPresent2=0x1 & op1RegMod=0x1 & RsIndirect) ... & Rd32 {
+	
+	RsIndirect = sext(Rd32);
+}
+
+#MOVsnd @R1 Index32, {@}R2
+:MOVsnd RsIndx32, Rd			is (opcode=0x26 & isOp1IndexPresent=0x1 & isDataPresent2=0x0 & op1RegMod=0x1 & Rd) ... & RsIndx32 {
+	
+	RsIndx32 = sext(Rd);
+}
+ 
+#MOVsnd @R1 Index32, @R2 Index32
+:MOVsnd RsIndx32, Rd32			is ((opcode=0x26 & isOp1IndexPresent=0x1 & isDataPresent2=0x1 & op1RegMod=0x1) ... & RsIndx32) ... & Rd32 {
+	
+	RsIndx32 = sext(Rd32);
+}
+
+
+######################################################
+############ MUL Instruction - p.1014 ################
+######################################################
+ 
+#MUL32/64 R1, {@}R2
+:MUL^InstType RsDirect, Rd 						is opcode=0xE & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = sext(RsDirect) * sext(Rd);
+}
+
+#MUL32/64 @R1, {@}R2
+:MUL^InstType RsIndirect, Rd 						is opcode=0xE & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = sext(RsIndirect) * sext(Rd);
+}
+
+#MUL32/64 R1, {@}R2 (Index16 / Imm16)
+:MUL^InstType RsDirect, Rd16						is (opcode=0xE & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = sext(RsDirect) * sext(Rd16);
+}
+
+#MUL32/64 @R1, {@}R2 (Index16 / Imm16)
+:MUL^InstType RsIndirect, Rd16						is (opcode=0xE & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = sext(RsIndirect) * sext(Rd16);
+}
+
+
+######################################################
+############ MULU Instruction - p.1016 ###############
+######################################################
+ 
+#MULU32/64 R1, {@}R2
+:MULU^InstType RsDirect, Rd 						is opcode=0xF & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect * Rd;
+}
+
+#MULU32/64 @R1, {@}R2
+:MULU^InstType RsIndirect, Rd 						is opcode=0xF & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect * Rd;
+}
+
+#MULU32/64 R1, {@}R2 (Index16 / Imm16)
+:MULU^InstType RsDirect, Rd16						is (opcode=0xF & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect * Rd16;
+}
+
+#MULU32/64 @R1, {@}R2 (Index16 / Imm16)
+:MULU^InstType RsIndirect, Rd16						is (opcode=0xF & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect * Rd16;
+} 
+ 
+ 
+######################################################
+############ NEG Instruction - p. 1016 ###############
+######################################################
+
+#NEG32/64 R1, {@}R2
+:NEG^InstType RsDirect, Rd 						is opcode=0xB & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = ~Rd;
+}
+
+#NEG32/64 @R1, {@}R2
+:NEG^InstType RsIndirect, Rd 						is opcode=0xB & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = ~Rd;
+}
+
+#NEG32/64 R1, {@}R2 (Index16 / Imm16)
+:NEG^InstType RsDirect, Rd16						is (opcode=0xB & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = ~Rd16;
+}
+
+#NEG32/64 @R1, {@}R2 (Index16 / Imm16)
+:NEG^InstType RsIndirect, Rd16						is (opcode=0xB & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = ~Rd16;
+} 
+
+ 
+#####################################################
+############ NOT Instruction - p.1017 ###############
+#####################################################
+ 
+#NOT32/64 R1, {@}R2
+:NOT^InstType RsDirect, Rd 						is opcode=0xA & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = ~Rd;
+}
+
+#NOT32/64 @R1, {@}R2
+:NOT^InstType RsIndirect, Rd 						is opcode=0xA & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = ~Rd;
+}
+
+#NOT32/64 R1, {@}R2 (Index16 / Imm16)
+:NOT^InstType RsDirect, Rd16						is (opcode=0xA & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = ~Rd16;
+}
+
+#NOT32/64 @R1, {@}R2 (Index16 / Imm16)
+:NOT^InstType RsIndirect, Rd16						is (opcode=0xA & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = ~Rd16;
+} 
+
+ 
+ 
+####################################################
+############ OR Instruction - p.1018 ###############
+####################################################
+ 
+
+
+#OR32/64 R1, {@}R2
+:OR^InstType RsDirect, Rd 						is opcode=0x15 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect | Rd;
+}
+
+#OR32/64 @R1, {@}R2
+:OR^InstType RsIndirect, Rd 						is opcode=0x15 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect | Rd;
+}
+
+#OR32/64 R1, {@}R2 (Index16 / Imm16)
+:OR^InstType RsDirect, Rd16						is (opcode=0x15 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect | Rd16;
+}
+
+#OR32/64 @R1, {@}R2 (Index16 / Imm16)
+:OR^InstType RsIndirect, Rd16						is (opcode=0x15 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect | Rd16;
+}
+ 
+ 
+######################################################
+############ POP Instruction - p.1019 ################
+######################################################
+
+:POP32 RsDirect								is opcode=0x2C & is64Op=0x0 & op1RegMod=0x0 & isDataPresent=0x0 & RsDirect { 
+
+	#Pop value from stack into RsDirect
+	RsDirect = * R0;
+
+	#Updae stack pointer
+	R0 = R0 + 4;
+}
+
+:POP32 RsIndirect							is opcode=0x2C & is64Op=0x0 & op1RegMod=0x1 & isDataPresent=0x0 & RsIndirect { 
+
+	#Pop value from stack into RsDirect
+	RsIndirect = *:4 R0;
+
+	#Update stack pointer
+	R0 = R0 + 4;
+}
+
+#Note we cant use here the RsData16 table since that table exports an address (= R1 + data16 ) and does not perform what is 
+#specified in the documentation: if Operand 1 is Direct then data16 gets added to the value popped from the stack and then
+#saved in Operand 1 (Thus we can still use the RsIndx16 table - for further description read p.1019 in the uefi specification).
+:POP32 op1Reg + data16							is opcode=0x2C & is64Op=0x0 & op1RegMod=0x0 & isDataPresent=0x1 & op1Reg ;data16 { 
+
+	#Pop value from stack into op1Reg
+	op1Reg = * R0 + zext(data16:2);
+	
+	#Update stack pointer
+	R0 = R0 + 4;
+	
+
+}
+
+:POP32 RsIndx16								is (opcode=0x2C & is64Op=0x0 & op1RegMod=0x1 & isDataPresent=0x1) ... & RsIndx16 {
+
+	#Pop value from stack into Rs
+	RsIndx16  = *:4 R0;
+	
+	#Update stack pointer
+	R0 = R0 + 4;
+}
+
+
+:POP64 RsDirect								is opcode=0x2C & is64Op=0x1 & op1RegMod=0x0 & isDataPresent=0x0 & RsDirect { 
+
+	#Pop value from stack into RsDirect
+	RsDirect = * R0;
+
+	#Updae stack pointer
+	R0 = R0 + 8;
+}
+
+:POP64 RsIndirect							is opcode=0x2C & is64Op=0x1 & op1RegMod=0x1 & isDataPresent=0x0 & RsIndirect { 
+
+	#Pop value from stack into RsDirect
+	RsIndirect = *:8 R0;
+
+	#Updae stack pointer
+	R0 = R0 + 8;
+}
+
+#Note we cant use here the RsData16 table since that table exports an address (= R1 + data16 ) and does not perform what is 
+#specified in the documenation: if Operand 1 is Direct then data16 gets added to the value popped from the stack and then
+#saved in Operand 1 (Thus we can still use the RsIndx16 table - for further description read p.1019 in the uefi specification).
+:POP64 op1Reg + data16							is opcode=0x2C & is64Op=0x1 & op1RegMod=0x0 & isDataPresent=0x1 & op1Reg ;data16 { 
+
+	#Pop value from stack into op1Reg
+	op1Reg = * R0 + zext(data16:2);
+	
+	#Update stack pointer
+	R0 = R0 + 8;
+	
+
+}
+
+:POP64 RsIndx16								is (opcode=0x2C & is64Op=0x1 & op1RegMod=0x1 & isDataPresent=0x1) ... & RsIndx16 {
+
+	#Pop value from stack into Rs
+	RsIndx16  = *:8 R0;
+	
+	#Update stack pointer
+	R0 = R0 + 8;
+}
+
+
+#######################################################
+############ POPn Instruction - p.1020 ################
+#######################################################
+
+
+:POPn RsDirect								is opcode=0x36 & op1RegMod=0x0 & isDataPresent=0x0 & RsDirect { 
+
+	#Pop value from stack into RsDirect
+	RsDirect = * R0;
+
+	#Update stack pointer
+	R0 = R0 + $(SIZEOFNATURAL);
+}
+
+:POPn RsIndirect							is opcode=0x36 & op1RegMod=0x1 & isDataPresent=0x0 & RsIndirect { 
+
+	#Pop value from stack into RsDirect
+	RsIndirect = *:8 R0;
+
+	#Update stack pointer
+	R0 = R0 + $(SIZEOFNATURAL);
+}
+
+#Note we cant use here the RsData16 table since that table exports an address (= R1 + data16 )- see the above POP instruction for further explanation 
+:POPn op1Reg + data16						is opcode=0x36 & op1RegMod=0x0 & isDataPresent=0x1 & op1Reg ;data16 { 
+
+	#Pop value from stack into op1Reg
+	op1Reg = * R0 + zext(data16:2);
+	
+	#Update stack pointer
+	R0 = R0 + $(SIZEOFNATURAL);
+	
+
+}
+
+:POPn RsIndx16								is (opcode=0x36 & op1RegMod=0x1 & isDataPresent=0x1) ... & RsIndx16 {
+
+	#Pop value from stack into Rs
+	RsIndx16  = *:8 R0;
+	
+	#Update stack pointer
+	R0 = R0 + $(SIZEOFNATURAL);
+}
+
+
+ 
+########################################################
+############ PUSH Instruction  - p.1021 ################
+########################################################
+
+:PUSH32 RsDirect							is opcode=0x2B & is64Op=0x0 & isDataPresent=0x0 & op1RegMod=0x0 & RsDirect { 
+
+	#Update stack pointer
+	R0 = R0 - 4;
+
+	#Store value into [R0]
+	*:4 R0 = RsDirect;
+}
+
+:PUSH32 RsIndirect							is opcode=0x2B & is64Op=0x0 & isDataPresent=0x0 & op1RegMod=0x1 & RsIndirect { 
+
+	#Update stack pointer
+	R0 = R0 - 4;
+
+	#Store value into [R0]
+	*:4 R0 = * RsIndirect;
+}
+
+:PUSH32 RsData16							is (opcode=0x2B & is64Op=0x0 & isDataPresent=0x1 & op1RegMod=0x0) ... & RsData16 { 
+
+	#Update stack pointer
+	R0 = R0 - 4;
+
+	#Store value into [R0]
+	*:4 R0 = * RsData16;
+}
+
+:PUSH32 RsIndx16							is (opcode=0x2B & is64Op=0x0 & isDataPresent=0x1 & op1RegMod=0x1) ... & RsIndx16 {
+
+	#Update stack pointer
+	R0 = R0 - 4;
+
+	#Store value into [R0]
+	*:4 R0 = * RsIndx16;
+}
+
+
+:PUSH64 RsDirect							is opcode=0x2B & is64Op=0x1 & isDataPresent=0x0 & op1RegMod=0x0 & RsDirect { 
+
+	#Update stack pointer
+	R0 = R0 - 8;
+
+	#Store value into [R0]
+	*:8 R0 = RsDirect;
+}
+
+:PUSH64 RsIndirect							is opcode=0x2B & is64Op=0x1 & isDataPresent=0x0 & op1RegMod=0x1 & RsIndirect { 
+
+	#Update stack pointer
+	R0 = R0 - 8;
+
+	#Store value into [R0]
+	*:8 R0 = * RsIndirect;
+}
+
+:PUSH64 RsData16							is (opcode=0x2B & is64Op=0x1 & isDataPresent=0x1 & op1RegMod=0x0) ... & RsData16 { 
+
+	#Update stack pointer
+	R0 = R0 - 8;
+
+	#Store value into [R0]
+	*:8 R0 = * RsData16;
+}
+
+:PUSH64 RsIndx16							is (opcode=0x2B & is64Op=0x1 & isDataPresent=0x1 & op1RegMod=0x1) ... & RsIndx16 {
+
+	#Update stack pointer
+	R0 = R0 - 8;
+
+	#Store value into [R0]
+	*:8 R0 = * RsIndx16;
+}
+
+########################################################
+############ PUSHn Instruction - p.1021 ################
+########################################################
+
+:PUSHn RsDirect							is opcode=0x35 & isDataPresent=0x0 & op1RegMod=0x0 & RsDirect { 
+
+	#Update stack pointer
+	R0 = R0 - $(SIZEOFNATURAL);
+
+	#Store value into [R0]
+	*:8 R0 = RsDirect;
+}
+
+:PUSHn RsIndirect						is opcode=0x35 & isDataPresent=0x0 & op1RegMod=0x1 & RsIndirect { 
+
+	#Update stack pointer
+	R0 = R0 - $(SIZEOFNATURAL);
+
+	#Store value into [R0]
+	*:8 R0 = * RsIndirect;
+}
+
+:PUSHn RsData16							is (opcode=0x35 & isDataPresent=0x1 & op1RegMod=0x0) ... & RsData16 { 
+
+	#Update stack pointer
+	R0 = R0 - $(SIZEOFNATURAL);
+
+	#Store value into [R0]
+	*:8 R0 = * RsData16;
+}
+
+:PUSHn RsIndx16							is (opcode=0x35 & isDataPresent=0x1 & op1RegMod=0x1) ... & RsIndx16 {
+
+	#Update stack pointer
+	R0 = R0 - $(SIZEOFNATURAL);
+
+	#Store value into [R0]
+	*:8 R0 = * RsIndx16;
+}
+
+
+#######################################################
+############ RET Instruction  - p.1022 ################
+#######################################################
+
+:RET 										is opcode=0x4 {
+	
+	#Restore return address into IP
+	pop8(IP);
+	
+	#Perform return op
+	return [IP];
+}
+
+ 
+#####################################################
+############ SHL Instruction - p.1023 ###############
+#####################################################
+ 
+
+#SHL32/64 R1, {@}R2
+:SHL^InstType RsDirect, Rd 						is opcode=0x17 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect  << Rd;
+}
+
+#SHL32/64 @R1, {@}R2
+:SHL^InstType RsIndirect, Rd 						is opcode=0x17 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect  << Rd;
+}
+
+#SHL32/64 R1, {@}R2 (Index16 / Imm16)
+:SHL^InstType RsDirect, Rd16						is (opcode=0x17 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect  << Rd16;
+}
+
+#SHL32/64 @R1, {@}R2 (Index16 / Imm16)
+:SHL^InstType RsIndirect, Rd16						is (opcode=0x17 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect  << Rd16;
+}
+
+
+ 
+#####################################################
+############ SHR Instruction - p.1024 ###############
+#####################################################
+ 
+
+#SHR32/64 R1, {@}R2
+:SHR^InstType RsDirect, Rd 						is opcode=0x18 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect  >> Rd;
+}
+
+#SHR32/64 @R1, {@}R2
+:SHR^InstType RsIndirect, Rd 						is opcode=0x18 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect  >> Rd;
+}
+
+#SHR32/64 R1, {@}R2 (Index16 / Imm16)
+:SHR^InstType RsDirect, Rd16						is (opcode=0x18 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect  >> Rd16;
+}
+
+#SHR32/64 @R1, {@}R2 (Index16 / Imm16)
+:SHR^InstType RsIndirect, Rd16						is (opcode=0x18 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect  >> Rd16;
+}
+
+
+#########################################################
+############ STORESP Instruction - p.1025 ###############
+#########################################################
+
+:STORESP op1Reg, dedcReg2 						is opcode=0x2A & dedcReg2 & op1Reg {
+	
+	 op1Reg = dedcReg2;
+}
+
+
+#####################################################
+############ SUB Instruction - p.1025 ###############
+#####################################################
+ 
+#SUB32/64 R1, {@}R2
+:SUB^InstType RsDirect, Rd 						is opcode=0xD & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect  - Rd;
+}
+
+#SUB32/64 @R1, {@}R2
+:SUB^InstType RsIndirect, Rd 						is opcode=0xD & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect  - Rd;
+}
+
+#SUB32/64 R1, {@}R2 (Index16 / Imm16)
+:SUB^InstType RsDirect, Rd16						is (opcode=0xD & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect  - Rd16;
+}
+
+#SUB32/64 @R1, {@}R2 (Index16 / Imm16)
+:SUB^InstType RsIndirect, Rd16						is (opcode=0xD & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect  - Rd16;
+}
+
+
+######################################################
+############ XOR Instruction - p.1026 ################
+######################################################
+ 
+ 
+#XOR32/64 R1, {@}R2
+:XOR^InstType RsDirect, Rd 						is opcode=0x16 & isDataPresent=0x0 & op1RegMod=0x0 & InstType & RsDirect & Rd {
+
+
+	RsDirect = RsDirect ^ Rd;
+}
+
+#XOR32/64 @R1, {@}R2
+:XOR^InstType RsIndirect, Rd 						is opcode=0x16 & isDataPresent=0x0 & op1RegMod=0x1 & InstType & RsIndirect & Rd {
+
+
+	RsIndirect = RsIndirect ^ Rd;
+}
+
+#XOR32/64 R1, {@}R2 (Index16 / Imm16)
+:XOR^InstType RsDirect, Rd16						is (opcode=0x16 & isDataPresent=0x1 & op1RegMod=0x0 & InstType & RsDirect) ... & Rd16 { 
+
+
+	RsDirect = RsDirect ^ Rd16;
+}
+
+#XOR32/64 @R1, {@}R2 (Index16 / Imm16)
+:XOR^InstType RsIndirect, Rd16						is (opcode=0x16 & isDataPresent=0x1 & op1RegMod=0x1 & InstType & RsIndirect) ... & Rd16 {
+
+	
+	RsIndirect = RsIndirect ^ Rd16;
+}
+
+
